@@ -27,11 +27,11 @@ Cannot be deleted until all items below are verified WORKING.
 - [ ] **Windows Testing**
   - [ ] Interactive role selection works
   - [ ] Global vs project scope works
-  - [ ] Platform selection (VS Code/Claude/Codex/Gemini) works
+  - [x] Platform selection (VS Code/Claude/Codex/Gemini) works
   - [ ] Team config JSON loading works
   - [ ] MCP profile configuration works
   - [ ] Configuration saved to ~/.accessibility-agents/config.json
-  - [ ] Non-interactive mode works (--yes flag)
+  - [x] Non-interactive mode works (--yes flag)
 
 - [ ] **macOS Testing**
   - [ ] All same checks as Windows
@@ -58,15 +58,15 @@ Cannot be deleted until all items below are verified WORKING.
 ### Health Utility (`gh skill health`)
 
 - [ ] **Windows Testing**
-  - [ ] Node.js version check works (shows version and path)
-  - [ ] Java version check works (optional, shows if missing)
+  - [x] GitHub CLI version check works (shows version and path)
+  - [x] Java version check works (optional, shows if missing)
   - [ ] Playwright Chromium detection works
-  - [ ] Agent files validation works (all 80 found)
-  - [ ] Skill files validation works (all 25 found)
-  - [ ] VS Code integration check works
+  - [x] Agent files validation works (all 80 found)
+  - [x] Skill files validation works (all 25 found)
+  - [x] VS Code integration check works
   - [ ] Claude Desktop MCP check works
-  - [ ] Git hooks detection works
-  - [ ] Output report generated correctly
+  - [x] Git hooks detection works
+  - [x] Output report generated correctly
 
 - [ ] **macOS Testing**
   - [ ] All same checks as Windows
@@ -88,7 +88,7 @@ Cannot be deleted until all items below are verified WORKING.
 ### Repair Utility (`gh skill repair`)
 
 - [ ] **Windows Testing**
-  - [ ] Manifest regeneration works
+  - [x] Manifest regeneration works
   - [ ] Detects all 80 agents
   - [ ] Detects all 25 skills
   - [ ] Git hooks reinstallation works
@@ -96,8 +96,8 @@ Cannot be deleted until all items below are verified WORKING.
   - [ ] File permissions fixed correctly
   - [ ] Configuration validation works
   - [ ] Version consistency checks work
-  - [ ] Output report generated correctly
-  - [ ] --auto-repair flag works (no prompts)
+  - [x] Output report generated correctly
+  - [x] --auto-repair flag works (no prompts)
 
 - [ ] **macOS Testing**
   - [ ] All same checks as Windows
@@ -118,12 +118,12 @@ Cannot be deleted until all items below are verified WORKING.
 ### Hooks Utility (`gh skill hooks`)
 
 - [ ] **Windows Testing**
-  - [ ] Hook install works in .git/hooks/pre-commit
+  - [x] Hook install works in .git/hooks/pre-commit
   - [ ] Hook is executable after install
-  - [ ] Hook test execution works
+  - [x] Hook test execution works
   - [ ] Global hook registration works
   - [ ] Hook uninstall removes file correctly
-  - [ ] Status check shows correct information
+  - [x] Status check shows correct information
   - [ ] Recent execution history available
 
 - [ ] **macOS Testing**
@@ -149,11 +149,11 @@ Cannot be deleted until all items below are verified WORKING.
 ### All Utilities Together
 
 - [ ] **Windows**
-  - [ ] Install → Setup → Health → All working: ✅
-  - [ ] Setup creates config: ✅
-  - [ ] Health validates setup: ✅
+  - [x] Install → Setup → Health → All working: ✅
+  - [x] Setup creates config: ✅
+  - [x] Health validates setup: ✅
   - [ ] Repair fixes any issues: ✅
-  - [ ] Hooks work with other utilities: ✅
+  - [x] Hooks work with other utilities: ✅
 
 - [ ] **macOS**
   - [ ] All same integration checks as Windows: ✅
@@ -209,10 +209,10 @@ Cannot be deleted until all items below are verified WORKING.
   - [ ] Old installer mention removed
 
 - [ ] **CLI Utilities Documentation**
-  - [ ] setup.js documented with examples
-  - [ ] health.js documented with output examples
-  - [ ] repair.js documented with use cases
-  - [ ] hooks.js documented with examples
+  - [ ] Go setup binary documented with examples
+  - [ ] Go health binary documented with output examples
+  - [ ] Go repair binary documented with use cases
+  - [ ] Go hooks binary documented with examples
 
 - [ ] **Migration Guide**
   - [ ] Step-by-step for 4.6.0 users
@@ -333,10 +333,10 @@ Phase 2 of 5.0.0 migration: Delete old installer files after Phase 0 (CLI utilit
 and Phase 1 (documentation) complete and verified.
 
 All functionality preserved in new utilities:
-- setup.js (role/scope/platform configuration)
-- health.js (runtime validation)
-- repair.js (installation repair/maintenance)
-- hooks.js (git hook management)
+- Go setup binary (role/scope/platform configuration)
+- Go health binary (runtime validation)
+- Go repair binary (installation repair/maintenance)
+- Go hooks binary (git hook management)
 
 Tests confirm feature parity with old installer.
 Multi-platform testing (Windows/macOS/Linux) complete.

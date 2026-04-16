@@ -63,7 +63,7 @@ accessibility-agents/
     hooks-guide.md       # Hook enforcement system documentation
   example/               # Deliberately broken page for practice
   templates/             # Scan config preset profiles
-  install.sh             # Installer (global, project, copilot, codex)
+  go-cli/                # Setup, health, repair, and hooks utilities
 ```
 
 ### Global hooks (installed to `~/.claude/hooks/`)

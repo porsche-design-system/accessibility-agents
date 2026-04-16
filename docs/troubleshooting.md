@@ -92,12 +92,14 @@ This shows all registered MCP servers and their connection status. Look for:
 
 #### Step 2: Check Workspace vs Profile Configuration
 
+MCP servers are configured in `mcp.json` files, not in `settings.json`.
+
 MCP servers are registered in **two possible places**:
 
-**Workspace-level** (`~/workspace/.vscode/settings.json` or `.code-workspace`):
+**Workspace-level** (`.vscode/mcp.json`):
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "accessibility": {
       "command": "node",
       "args": ["path/to/mcp-server/server.js"]
@@ -106,10 +108,10 @@ MCP servers are registered in **two possible places**:
 }
 ```
 
-**Profile-level** (`~/.vscode/settings.json`):
+**Profile-level** (User/Profile `mcp.json` opened via **MCP: Open User Configuration**):
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "accessibility": {
       "command": "node",
       "args": ["path/to/mcp-server/server.js"]
@@ -118,15 +120,14 @@ MCP servers are registered in **two possible places**:
 }
 ```
 
-**VS Code 1.113 Behavior:**
-- Workspace MCP servers **override** profile MCP servers with the same name
-- Both are merged if names don't conflict
-- Check **both locations** if a server is not appearing
+**VS Code Behavior:**
+- Workspace and profile MCP servers can both be loaded
+- If a server does not appear, inspect both workspace and user `mcp.json`
 
 **To Debug:**
-1. Open Settings (`Ctrl+,`)
-2. Search for "MCP" — shows active MCP configuration
-3. Look for `mcpServers` object
+1. Open Command Palette and run **MCP: Open Workspace Folder Configuration**
+2. Open Command Palette and run **MCP: Open User Configuration**
+3. Confirm each file contains a top-level `servers` object
 4. Verify `command` path is correct and executable
 5. Verify `args` array has correct server path and arguments
 
@@ -196,9 +197,9 @@ copilot /agent accessibility-lead
 3. Run `copilot /agent` without args — shows available agents; look for "MCP tools" section
 
 **If MCP not showing in Copilot CLI:**
-- MCP servers must be in **workspace-level** `.vscode/settings.json` or `.code-workspace` file
-- Profile-level MCP servers are **not** bridged to CLI
-- Move the `mcpServers` configuration to `.vscode/settings.json` in your workspace root
+- Prefer workspace-level `.vscode/mcp.json` for project-scoped tool availability
+- Confirm the server is enabled/trusted in VS Code
+- Move the MCP server definition to `.vscode/mcp.json` if it is only in user profile config
 
 ### Symptom: Agent Can't Use MCP Tools
 
@@ -232,7 +233,7 @@ Command Palette → MCP: Debug Tools
 
 Look for the tool in this list. If missing:
 1. Verify MCP server is Connected (not Failed)
-2. Check server configuration — may need to enable the tool in `mcpServers` settings
+2. Check server configuration in `.vscode/mcp.json` or user `mcp.json`
 3. Restart VS Code to reload MCP servers
 
 #### Check 3: MCP Server Permissions
@@ -253,7 +254,7 @@ If `MCP: List Servers` shows a server as **Failed** every time you restart:
 The MCP server in this repo requires:
 - **Node.js 18+** (check: `node --version`)
 - **npm or yarn** (for dependency installation)
-- **Port 8000 available** (for HTTP server; configurable in `mcp-server/server.js`)
+- **Port 3100 available** (default HTTP server port)
 
 ```bash
 # Verify Node.js version
@@ -273,31 +274,26 @@ node server.js
 ```
 
 Watch for errors:
-- `EADDRINUSE` → Port 8000 in use; change port in `server.js` line ~XX
+- `EADDRINUSE` → Port 3100 in use; set `A11Y_MCP_PORT` to a free port and restart
 - `ERR_MODULE_NOT_FOUND` → Missing dependencies; run `npm install`
 - `Permission denied` → File permission issue; check folder ownership
 
 #### Step 3: Check VS Code MCP Config
 
-In settings.json, verify the path to server is correct:
+In `.vscode/mcp.json` (workspace) or user `mcp.json`, verify the server configuration:
 
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "accessibility": {
-      "command": "node",
-      "args": [
-        "/full/path/to/mcp-server/server.js"
-      ]
+      "type": "http",
+      "url": "http://127.0.0.1:3100/mcp"
     }
   }
 }
 ```
 
-**Use absolute paths**, not relative paths. Example:
-- ✅ `c:\\Users\\username\\code\\agents\\mcp-server\\server.js` (Windows)
-- ✅ `/Users/username/code/agents/mcp-server/server.js` (macOS)
-- ❌ `./mcp-server/server.js` (relative — may fail if cwd changes)
+If you use stdio mode instead of HTTP mode, use absolute paths for script arguments.
 
 #### Step 4: Enable MCP Debug Logging
 

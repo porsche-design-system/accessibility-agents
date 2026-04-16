@@ -9,11 +9,33 @@ After migrating to `gh skill`, we replace the monolithic installer with 4 focuse
 3. **`repair`** — Fix broken installations
 4. **`hooks`** — Git hook management
 
+### Building the Go binaries
+
+During development, build the utilities with the provided scripts:
+
+```powershell
+pwsh -NoProfile -File scripts/build-go-cli.ps1
+```
+
+```bash
+bash scripts/build-go-cli.sh
+```
+
+This produces native binaries in `go-cli/bin/`:
+
+- `a11y-agents-setup`
+- `a11y-agents-health`
+- `a11y-agents-repair`
+- `a11y-agents-hooks`
+
+On Windows, the outputs are `.exe` files.
+
 ---
 
-## 1. Setup Utility (`.github/cli/setup.js`)
+## 1. Setup Utility (`go-cli/cmd/setup`)
 
 ### Purpose
+
 Post-install configuration wizard. Runs after `gh skill install`.
 
 ### Usage
@@ -22,16 +44,17 @@ Post-install configuration wizard. Runs after `gh skill install`.
 # Interactive mode (wizard)
 gh skill setup Community-Access/accessibility-agents
 
-# Or standalone
-node .github/cli/setup.js
+# Or standalone during development
+go run ./go-cli/cmd/setup
 
-# Non-interactive with options
-node .github/cli/setup.js --role developer --scope global --yes
+# Or using the built binary
+a11y-agents-setup --role developer --scope global --yes
 ```
 
 ### Functionality
 
 #### Step 1: Detect Current Environment
+
 ```
 ✓ Checking installed agents/skills...
 ✓ Found 80 agents at ~/.gh/skills/...
@@ -39,6 +62,7 @@ node .github/cli/setup.js --role developer --scope global --yes
 ```
 
 #### Step 2: Scope Selection
+
 ```
 Installation scope:
   1. Global (~/.claude/agents)
@@ -48,6 +72,7 @@ Choose: [1] > _
 ```
 
 #### Step 3: Role Selection
+
 ```
 Installation role:
   1. Developer (all agents + CLI tools)
@@ -60,6 +85,7 @@ Choose: [1] > _
 ```
 
 #### Step 4: Platform Setup
+
 ```
 Configure for:
   [ ] VS Code (Copilot) - Stable
@@ -72,6 +98,7 @@ Configure: [y/n] > y
 ```
 
 #### Step 5: MCP Profile Configuration
+
 ```
 Configuring VS Code MCP profiles...
   ✓ Detected VS Code Stable at C:\Users\...\AppData\Local\...
@@ -82,6 +109,7 @@ Enter MCP server port [8080]: > _
 ```
 
 #### Step 6: Team Config (Optional)
+
 ```
 Team configuration file (optional):
   Path to config.json: > config.json
@@ -91,6 +119,7 @@ Validating config...
 ```
 
 #### Step 7: Summary & Confirmation
+
 ```
 Configuration Summary:
   Scope: Global (~/.claude/agents)
@@ -103,9 +132,10 @@ Apply configuration? [y/n] > y
 ```
 
 #### Step 8: Post-Setup Health Check
+
 ```
 Running health checks...
-  ✓ Node.js v18.12.0 (required for MCP)
+  ✓ GitHub CLI detected
   ✓ Agent files validated
   ✓ Skill files validated
   ✓ MCP profile configured
@@ -126,6 +156,7 @@ Running health checks...
 ```
 
 ### Return Codes
+
 - `0`: Success
 - `1`: User cancelled
 - `2`: Configuration error
@@ -133,9 +164,10 @@ Running health checks...
 
 ---
 
-## 2. Health Utility (`.github/cli/health.js`)
+## 2. Health Utility (`go-cli/cmd/health`)
 
 ### Purpose
+
 Validate that all runtime dependencies and configurations are working.
 
 ### Usage
@@ -144,27 +176,31 @@ Validate that all runtime dependencies and configurations are working.
 # Interactive check
 gh skill health Community-Access/accessibility-agents
 
-# Or standalone
-node .github/cli/health.js
+# Or standalone during development
+go run ./go-cli/cmd/health
 
 # Specific check
-node .github/cli/health.js --check runtimes
-node .github/cli/health.js --check agents
-node .github/cli/health.js --check hooks
-node .github/cli/health.js --check all
+a11y-agents-health --check runtimes
+a11y-agents-health --check agents
+a11y-agents-health --check hooks
+a11y-agents-health --check all
 ```
 
 ### Checks Performed
 
 #### 1. Runtime Dependencies
+
 ```
 Runtime Dependencies:
-  ✓ Node.js v18.12.0 (required for MCP server)
+  ✓ GitHub CLI v2.47.0+ (required)
   ⚠ Java 11.0.15 (optional, for PDF analysis)
   ✓ Git 2.37.0 (required for hooks)
 ```
 
+Node.js remains optional here. It is only required when a user wants to run the MCP server locally.
+
 #### 2. Playwright Browsers
+
 ```
 Playwright Browsers:
   ✓ Chromium (for accessibility scans)
@@ -173,6 +209,7 @@ Playwright Browsers:
 ```
 
 #### 3. Agent/Skill Files
+
 ```
 Agent & Skill Files:
   ✓ 80 agents found
@@ -182,6 +219,7 @@ Agent & Skill Files:
 ```
 
 #### 4. Configuration
+
 ```
 Configuration:
   ✓ User config loaded
@@ -191,6 +229,7 @@ Configuration:
 ```
 
 #### 5. VS Code Integration
+
 ```
 VS Code Integration:
   ✓ Extension installed (Copilot)
@@ -200,14 +239,16 @@ VS Code Integration:
 ```
 
 #### 6. Claude Desktop MCP
+
 ```
 Claude Desktop MCP:
-  ✓ Configuration exists at ~/.claude/profiles/default
+  ✓ Configuration exists in claude_desktop_config.json
   ✓ MCP server socket accessible
   ✓ Health check passed
 ```
 
 #### 7. Git Hooks
+
 ```
 Git Hooks:
   ✓ Pre-commit hook installed
@@ -217,6 +258,7 @@ Git Hooks:
 ```
 
 #### 8. Network Connectivity
+
 ```
 Network:
   ✓ GitHub API accessible
@@ -246,6 +288,7 @@ Config: ~/.accessibility-agents/config.json
 ```
 
 ### Return Codes
+
 - `0`: All checks passed
 - `1`: 1+ critical issues
 - `2`: Issues but functional
@@ -253,9 +296,10 @@ Config: ~/.accessibility-agents/config.json
 
 ---
 
-## 3. Repair Utility (`.github/cli/repair.js`)
+## 3. Repair Utility (`go-cli/cmd/repair`)
 
 ### Purpose
+
 Fix broken or misconfigured installations.
 
 ### Usage
@@ -264,22 +308,23 @@ Fix broken or misconfigured installations.
 # Interactive repair
 gh skill repair Community-Access/accessibility-agents
 
-# Or standalone
-node .github/cli/repair.js
+# Or standalone during development
+go run ./go-cli/cmd/repair
 
 # Auto-repair (no prompts)
-node .github/cli/repair.js --auto-repair
+a11y-agents-repair --auto-repair
 
 # Specific repairs
-node .github/cli/repair.js --fix manifests
-node .github/cli/repair.js --fix hooks
-node .github/cli/repair.js --fix config
-node .github/cli/repair.js --fix all
+a11y-agents-repair --fix manifests
+a11y-agents-repair --fix hooks
+a11y-agents-repair --fix config
+a11y-agents-repair --fix all
 ```
 
 ### Repair Actions
 
 #### 1. Regenerate Manifests
+
 ```
 Regenerating manifests...
   ✓ Found 80 agents
@@ -289,6 +334,7 @@ Regenerating manifests...
 ```
 
 #### 2. Reinstall Git Hooks
+
 ```
 Reinstalling Git hooks...
   ✓ Found pre-commit hook
@@ -299,6 +345,7 @@ Reinstalling Git hooks...
 ```
 
 #### 3. Validate Configuration
+
 ```
 Validating configuration...
   ✓ config.json exists
@@ -310,6 +357,7 @@ Validating configuration...
 ```
 
 #### 4. Sync MCP Profiles
+
 ```
 Syncing MCP profiles...
   ✓ Claude Desktop profile found
@@ -320,6 +368,7 @@ Syncing MCP profiles...
 ```
 
 #### 5. Fix File Permissions
+
 ```
 Fixing file permissions...
   ✓ Agent files: readable ✓
@@ -330,6 +379,7 @@ Fixing file permissions...
 ```
 
 #### 6. Version Consistency
+
 ```
 Checking version consistency...
   Current: 5.0.0
@@ -365,15 +415,17 @@ Next step: Run 'gh skill health' to verify
 ```
 
 ### Return Codes
+
 - `0`: Repairs completed successfully
 - `1`: Some repairs failed, manual intervention needed
 - `2`: Unable to repair, reinstall recommended
 
 ---
 
-## 4. Hooks Utility (`.github/cli/hooks.js`)
+## 4. Hooks Utility (`go-cli/cmd/hooks`)
 
 ### Purpose
+
 Manage Git pre-commit hooks for accessibility checks.
 
 ### Usage
@@ -389,7 +441,7 @@ gh skill hooks Community-Access/accessibility-agents uninstall
 gh skill hooks Community-Access/accessibility-agents status
 
 # Standalone
-node .github/cli/hooks.js install|uninstall|status
+go run ./go-cli/cmd/hooks --action status
 ```
 
 ### Install Functionality
@@ -459,6 +511,7 @@ Recent Hook Executions:
 ```
 
 ### Return Codes
+
 - `0`: Success
 - `1`: Git repository not found
 - `2`: Permission denied
@@ -469,14 +522,16 @@ Recent Hook Executions:
 ## Implementation Phases
 
 ### Phase 1: Build Utilities
-- [ ] `setup.js` — interactive configuration (300 lines)
-- [ ] `health.js` — dependency validation (200 lines)
-- [ ] `repair.js` — fix installations (200 lines)
-- [ ] `hooks.js` — Git hook management (150 lines)
+
+- [ ] `go-cli/cmd/setup` — interactive configuration binary
+- [ ] `go-cli/cmd/health` — dependency validation binary
+- [ ] `go-cli/cmd/repair` — fix installations binary
+- [ ] `go-cli/cmd/hooks` — Git hook management binary
 
 ### Phase 2: Integration with `gh skill`
 
 Each utility is invokable as:
+
 ```bash
 gh skill setup Community-Access/accessibility-agents
 gh skill health Community-Access/accessibility-agents
@@ -490,19 +545,20 @@ This requires entries in `plugin.yaml`:
 subcommands:
   - name: setup
     description: "Interactive setup wizard"
-    command: node .github/cli/setup.js
+    command: bin/a11y-agents-setup
   - name: health
     description: "Validate runtime configuration"
-    command: node .github/cli/health.js
+    command: bin/a11y-agents-health
   - name: repair
     description: "Fix broken installations"
-    command: node .github/cli/repair.js
+    command: bin/a11y-agents-repair
   - name: hooks
     description: "Manage Git pre-commit hooks"
-    command: node .github/cli/hooks.js
+    command: bin/a11y-agents-hooks
 ```
 
 ### Phase 3: Testing
+
 - [ ] Test on macOS
 - [ ] Test on Windows (PowerShell)
 - [ ] Test on Linux (Bash)
@@ -511,6 +567,7 @@ subcommands:
 - [ ] Verify all features preserved from 4.6.0 installer
 
 ### Phase 4: Documentation
+
 - [ ] Update README with new workflow
 - [ ] Document each utility
 - [ ] Provide examples
@@ -523,29 +580,32 @@ subcommands:
 | Feature | 4.6.0 | 5.0.0+ | Utility |
 |---------|-------|--------|---------|
 | Installation | install.ps1 | `gh skill install` | GitHub |
-| Role selection | -Role flag | `gh skill setup` (interactive) | setup.js |
-| Scope (global/project) | -Project/-Global | `gh skill setup` (interactive) | setup.js |
-| MCP setup | Embedded | `gh skill setup` | setup.js |
-| VS Code Copilot | Embedded | `gh skill setup` | setup.js |
-| Team config | -Config flag | `gh skill setup` (optional) | setup.js |
-| Runtime validation | Built-in | `gh skill health` | health.js |
-| Dependency checks | Built-in | `gh skill health` | health.js |
-| Repair/fix | Embedded | `gh skill repair` | repair.js |
-| Git hooks | Install-GlobalHooks | `gh skill hooks install` | hooks.js |
-| Hook status | install.ps1 -Check | `gh skill hooks status` | hooks.js |
-| Post-install check | Automatic | `gh skill health` (manual) | health.js |
+| Role selection | -Role flag | `gh skill setup` (interactive) | setup |
+| Scope (global/project) | -Project/-Global | `gh skill setup` (interactive) | setup |
+| MCP setup | Embedded | `gh skill setup` | setup |
+| VS Code Copilot | Embedded | `gh skill setup` | setup |
+| Team config | -Config flag | `gh skill setup` (optional) | setup |
+| Runtime validation | Built-in | `gh skill health` | health |
+| Dependency checks | Built-in | `gh skill health` | health |
+| Repair/fix | Embedded | `gh skill repair` | repair |
+| Git hooks | Install-GlobalHooks | `gh skill hooks install` | hooks |
+| Hook status | install.ps1 -Check | `gh skill hooks status` | hooks |
+| Post-install check | Automatic | `gh skill health` (manual) | health |
 
 ---
 
 ## Summary
 
 ### What We're Building
-4 focused Node.js CLI utilities (~850 lines total) to handle all installer responsibilities.
+
+4 focused Go CLI binaries handle all installer responsibilities without introducing a Node.js dependency for setup tooling.
 
 ### What We're Removing
+
 6,767 lines of platform-specific installer code.
 
 ### What We're Gaining
+
 - ✅ Simpler, more maintainable code
 - ✅ Faster releases
 - ✅ Professional GitHub distribution

@@ -82,12 +82,12 @@ These features **cannot be handled by gh skill** and must be preserved:
 1. **Git Hooks Installation** ❌ gh skill doesn't do this
    - Currently: `Install-GlobalHooks` function in install.ps1
    - Must preserve: Pre-commit hook setup for accessibility checks
-   - Solution: Post-install script or separate `gh skill hook install` command
+   - Solution: Separate Go-based `gh skill hooks install` command
 
 2. **Runtime Dependency Checks** ❌ gh skill doesn't validate runtimes
    - Currently: Node.js, Java, Playwright validation
-   - Must preserve: Warn users if Node.js is missing (MCP server needs it)
-   - Solution: First-run diagnostic script
+   - Must preserve: Warn users if Node.js is missing when they enable the MCP server
+   - Solution: First-run diagnostic command implemented in Go
 
 3. **Configuration Management** ❌ gh skill doesn't support role-based config
    - Currently: Role-based installation (developer/reviewer/author/full/custom)
@@ -102,7 +102,7 @@ These features **cannot be handled by gh skill** and must be preserved:
 5. **Repair & Validation** ❌ gh skill doesn't provide repair commands
    - Currently: `./install.ps1 -Check` validates everything
    - Must preserve: `gh skill repair` or similar command
-   - Solution: Separate CLI utility or `gh skill` subcommand
+   - Solution: Separate Go CLI utility exposed through `gh skill` subcommands
 
 6. **Scope Management** ❌ gh skill installs to one location only
    - Currently: Project vs Global installation choice
@@ -198,7 +198,7 @@ gh skill hooks Community-Access/accessibility-agents install|uninstall
 
 ## Files to Create
 
-### 1. `.github/cli/setup.js` (Post-Install Setup)
+### 1. `go-cli/cmd/setup` (Post-Install Setup)
 Handles:
 - Interactive role selection
 - Scope management (global/project)
@@ -207,11 +207,11 @@ Handles:
 - MCP profile configuration
 
 ```bash
-node .github/cli/setup.js
+go run ./go-cli/cmd/setup
 # Or via gh skill: gh skill setup Community-Access/accessibility-agents
 ```
 
-### 2. `.github/cli/health.js` (Runtime Validation)
+### 2. `go-cli/cmd/health` (Runtime Validation)
 Checks:
 - Node.js version
 - Java version
@@ -220,11 +220,11 @@ Checks:
 - Git hooks status
 
 ```bash
-node .github/cli/health.js
+go run ./go-cli/cmd/health
 # Or via gh skill: gh skill health Community-Access/accessibility-agents
 ```
 
-### 3. `.github/cli/repair.js` (Fix Broken Installations)
+### 3. `go-cli/cmd/repair` (Fix Broken Installations)
 Actions:
 - Reinstall Git hooks
 - Regenerate manifests
@@ -232,11 +232,11 @@ Actions:
 - Validate consistency
 
 ```bash
-node .github/cli/repair.js --auto-repair
+go run ./go-cli/cmd/repair --auto-repair
 # Or via gh skill: gh skill repair Community-Access/accessibility-agents
 ```
 
-### 4. `.github/cli/hooks.js` (Git Hook Management)
+### 4. `go-cli/cmd/hooks` (Git Hook Management)
 Manages:
 - Pre-commit hook installation
 - Hook registration
@@ -244,7 +244,7 @@ Manages:
 - Uninstall cleanup
 
 ```bash
-node .github/cli/hooks.js install|uninstall
+go run ./go-cli/cmd/hooks --action status
 # Or via gh skill: gh skill hooks Community-Access/accessibility-agents install
 ```
 
@@ -276,10 +276,10 @@ node .github/cli/hooks.js install|uninstall
 
 - [x] Create migration guide ✅
 - [x] Document adoption plan ✅
-- [ ] Build `.github/cli/setup.js` (post-install wizard)
-- [ ] Build `.github/cli/health.js` (runtime validation)
-- [ ] Build `.github/cli/repair.js` (fix broken installs)
-- [ ] Build `.github/cli/hooks.js` (git hook management)
+- [ ] Build `go-cli/cmd/setup` (post-install wizard)
+- [ ] Build `go-cli/cmd/health` (runtime validation)
+- [ ] Build `go-cli/cmd/repair` (fix broken installs)
+- [ ] Build `go-cli/cmd/hooks` (git hook management)
 - [ ] Update docs for `gh skill setup` workflow
 - [ ] Create interactive setup tests
 - [ ] Verify all functionality preserved in new CLI utilities
@@ -289,22 +289,7 @@ node .github/cli/hooks.js install|uninstall
 ## User Experience: Side-by-Side Comparison
 
 ### 4.6.0 (Old Way)
-```bash
-# Download and run installer
-irm https://raw.githubusercontent.com/.../install.ps1 | iex -Force
-
-# Options passed via flags
-.\install.ps1 -Global -Copilot -Role developer -Yes
-
-# Updates are manual
-.\install.ps1 -Force
-
-# Check health
-.\install.ps1 -Check
-
-# Fix issues
-.\scripts\repair-install.ps1
-```
+Legacy script-based installation (removed in 5.0.0) used platform-specific installers and repair scripts.
 
 ### 5.0.0+ (New Way)
 ```bash
@@ -334,7 +319,7 @@ gh skill hooks Community-Access/accessibility-agents install
 
 ### What Could Break
 
-1. **Git Hooks** — Must rebuild in Node.js CLI
+1. **Git Hooks** — Must rebuild in the Go CLI
 2. **MCP Configuration** — Must handle in setup wizard
 3. **Role-based config** — Must preserve in setup script
 4. **Runtime checks** — Must implement in health script
@@ -343,10 +328,10 @@ gh skill hooks Community-Access/accessibility-agents install
 
 All functionality is **preserved**, just moved from monolithic 2,000+ line installer to focused utility scripts:
 
-- `setup.js` — Interactive configuration (~300 lines)
-- `health.js` — Runtime validation (~200 lines)
-- `repair.js` — Fix installations (~200 lines)
-- `hooks.js` — Git hook management (~150 lines)
+- `setup` — Interactive configuration binary
+- `health` — Runtime validation binary
+- `repair` — Fix installations binary
+- `hooks` — Git hook management binary
 
 **Total: ~850 lines** (vs. 6,767 in old installer)
 

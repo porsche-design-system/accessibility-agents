@@ -23,6 +23,8 @@ gh skill health Community-Access/accessibility-agents
 
 **That's it!** You're ready to use accessibility agents.
 
+Important: you do not need Node.js to run `gh skill install`, `gh skill setup`, `gh skill health`, `gh skill repair`, or `gh skill hooks`. Those commands are backed by native Go binaries. Node.js is only needed if you choose to run the MCP server locally.
+
 ---
 
 ## What's New in 5.0.0
@@ -48,7 +50,7 @@ gh skill health Community-Access/accessibility-agents
 
 ### ✅ Better Maintenance
 
-- 90% less installer code (6,767 → 850 lines)
+- 90% less installer code (6,767 → about 850 lines of focused Go CLI code)
 - Unified cross-platform experience
 - Professional tooling
 
@@ -61,6 +63,14 @@ gh skill health Community-Access/accessibility-agents
 **Prerequisites:**
 - GitHub CLI (gh) installed ([install.cli.github.com](https://cli.github.com))
 - PowerShell 5.0+ or Windows Terminal
+
+**If you are building the 5.0 Go utilities locally:**
+
+```powershell
+winget install --id GoLang.Go --exact --accept-package-agreements --accept-source-agreements
+go version
+pwsh -NoProfile -File scripts/build-go-cli.ps1
+```
 
 **Installation:**
 ```powershell
@@ -87,6 +97,14 @@ gh skill health Community-Access/accessibility-agents
 **Prerequisites:**
 - GitHub CLI (gh) installed (`brew install gh`)
 - Bash 4+ or Zsh
+
+**If you are building the 5.0 Go utilities locally:**
+
+```bash
+brew install go
+go version
+bash scripts/build-go-cli.sh
+```
 
 **Installation:**
 ```bash
@@ -233,6 +251,8 @@ gh skill setup Community-Access/accessibility-agents --config team-config.json
 ✅ Setup complete!
 ```
 
+Implementation note: in 5.0.0 this command is intended to be backed by a native Go binary rather than a Node.js script, which keeps setup lightweight on Windows, macOS, and Linux.
+
 ### `gh skill health`
 Validates your installation and runtime environment.
 
@@ -241,7 +261,7 @@ gh skill health Community-Access/accessibility-agents
 ```
 
 **Checks:**
-- Node.js version ✅
+- GitHub CLI version ✅
 - Java version (if needed) ✅
 - Playwright Chromium ✅
 - Agent files ✅
@@ -249,6 +269,8 @@ gh skill health Community-Access/accessibility-agents
 - VS Code integration ✅
 - Claude Desktop MCP ✅
 - Git hooks ✅
+
+Node.js is reported only when a user has enabled local MCP server workflows.
 
 **Output:**
 ```
@@ -459,7 +481,7 @@ gh skill setup Community-Access/accessibility-agents
 
 - **GitHub Issues:** [github.com/Community-Access/accessibility-agents/issues](https://github.com/Community-Access/accessibility-agents/issues)
 - **Discussions:** [github.com/Community-Access/accessibility-agents/discussions](https://github.com/Community-Access/accessibility-agents/discussions)
-- **Docs:** [github.com/Community-Access/accessibility-agents/docs](https://github.com/Community-Access/accessibility-agents/docs)
+- **Docs:** [github.com/Community-Access/accessibility-agents/tree/main/docs](https://github.com/Community-Access/accessibility-agents/tree/main/docs)
 - **GitHub CLI Help:** `gh skill --help`
 
 ---

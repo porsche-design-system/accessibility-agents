@@ -80,12 +80,12 @@ All agents run on:
 **Automatic Updates (Recommended):**
 
 ```bash
-# Set up daily auto-updates during installation (recommended)
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash
-# Choose "Yes" when prompted for auto-updates
+# Update the skill itself
+gh extension upgrade gh-skill
 
-# Or manually enable auto-updates later
-bash update.sh --auto
+# Pull latest repository changes when working from source
+cd accessibility-agents
+git pull origin main
 ```
 
 **Manual Updates:**
@@ -94,7 +94,6 @@ bash update.sh --auto
 # Update Accessibility Agents
 cd accessibility-agents
 git pull origin main
-bash update.sh
 
 # Update VS Code
 # Help → Check for Updates (or auto-updates if enabled in settings)
@@ -235,72 +234,97 @@ Have a great accessibility-themed thinking phrase? Submit a PR to add it to our 
 
 ## Quick Start
 
-### One-liner install
+### 5.0 Installation Direction
+
+Version 5.0.0 moves Accessibility Agents to a GitHub Skills installation flow backed by native Go binaries for setup, health checks, repair, and hook management.
+
+Planned 5.0 flow:
+
+```bash
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
+gh skill health Community-Access/accessibility-agents
+```
+
+Important:
+- `gh skill install` is the future primary install path.
+- The setup tooling is being implemented as native Go binaries, not Node.js scripts.
+- Node.js is still required for the MCP server itself, but not for the installer experience.
+
+### Build the 5.0 CLI
+
+If you are contributing to the 5.0 installer transition or preparing release artifacts, install Go and build the native CLI locally.
+
+**Windows:**
+
+```powershell
+winget install --id GoLang.Go --exact --accept-package-agreements --accept-source-agreements
+go version
+pwsh -NoProfile -File scripts/build-go-cli.ps1
+```
 
 **macOS:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash
+brew install go
+go version
+bash scripts/build-go-cli.sh
 ```
 
-The shell installer requires a real `bash` environment. On Windows, use PowerShell by default; use the shell installer only from Git Bash, WSL, or another environment that provides `bash`.
+The compiled binaries are written to `go-cli/bin/`. Windows outputs are `.exe` files. macOS outputs are native CLI executables.
 
-**Windows (PowerShell):**
+GitHub Actions also builds the Go CLI automatically on Windows, macOS, and Linux via [.github/workflows/build-go-cli.yml](.github/workflows/build-go-cli.yml).
 
-```powershell
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.ps1 | iex
-```
+5.0+ uses the GitHub Skills / Go CLI path as the supported installer path.
 
-If both VS Code and VS Code Insiders are installed, the installer copies Copilot assets into both profiles automatically.
+### Install
 
-Non-interactive install examples:
+Use the GitHub Skills installer:
 
 ```bash
-bash install.sh --project --copilot --yes --no-auto-update --dry-run
+gh skill install Community-Access/accessibility-agents
 ```
 
-```powershell
-.\install.ps1 -Project -Copilot -Yes -NoAutoUpdate -DryRun
-```
-
-Each install, update, and uninstall command now writes a machine-readable summary or plan file by default. PowerShell scripts accept both `-SummaryPath ...` and `--summary ...`; `uninstall.ps1` also accepts `--summary=...` for compatibility. Shell scripts continue to use `--summary=...`.
-
-See the full [Getting Started Guide](docs/getting-started.md) for all installation options, manual setup, global vs project install, auto-updates, and platform-specific details.
-
-### One-liner uninstall
-
-**macOS:**
+Then run setup/health/repair utilities as needed:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/uninstall.sh | bash
+gh skill setup Community-Access/accessibility-agents
+gh skill health Community-Access/accessibility-agents
+gh skill repair Community-Access/accessibility-agents
 ```
 
-**Windows (PowerShell):**
+### Uninstall
 
-```powershell
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/uninstall.ps1 | iex
+```bash
+gh skill uninstall Community-Access/accessibility-agents
 ```
 
-The uninstaller removes all agents, config sections, assets, extensions, and auto-update tasks across every platform (Claude Code, Copilot, Codex, Gemini). If no manifest file is found, it downloads the repo to build a fallback file list so nothing is missed.
+If you need manual cleanup details, see [UNINSTALL.md](UNINSTALL.md).
 
-For step-by-step manual removal instructions, see [UNINSTALL.md](UNINSTALL.md).
+### Legacy Scripts Removed
+
+The legacy script installers were removed in this branch:
+
+`install.ps1`, `install.sh`, `update.ps1`, `update.sh`, `uninstall.ps1`, `uninstall.sh`.
+
+Use `gh skill` commands going forward.
 
 ### Safe installation — your files are never overwritten
 
-The installer is designed to be additive and non-destructive:
+The setup flow is designed to be additive and non-destructive:
 
 - **Agent files** (`~/.claude/agents/`, `.github/agents/`) - existing files are skipped, not replaced. A message tells you which agents were skipped so you know what you already have.
 - **Config files** (`copilot-instructions.md`, `copilot-review-instructions.md`, `copilot-commit-message-instructions.md`) - our content is wrapped in `<!-- a11y-agent-team: start/end -->` markers and merged into your existing file. Your content above and below the markers is always preserved. If the file does not exist, it is created.
 - **Asset directories** (`skills/`, `instructions/`, `prompts/`) - copied file-by-file; files that already exist are skipped.
-- **Manifest file** (`.a11y-agent-manifest`) - tracks every file we installed. The update script uses this list to ensure it only touches files we own, never user-created agents. When contributors add new agents to the repo, those files are automatically installed on next update and added to the manifest.
+- **Manifest file** (`.a11y-agent-manifest`) - tracks every file we installed. Repair and update flows use this list to ensure they only touch files we own, never user-created agents. When contributors add new agents to the repo, those files are installed on the next setup/repair pass and added to the manifest.
 
-**Updates are equally safe** - the update script never deletes agent files. If a file is not in the manifest (meaning you created it yourself), it will not be modified or removed.
+**Updates are equally safe** - maintenance flows never delete user agent files. If a file is not in the manifest (meaning you created it yourself), it will not be modified or removed.
 
-To reinstall a specific agent from scratch, delete it first and rerun the installer (or update script).
+To reinstall a specific agent from scratch, delete it first and rerun setup or repair.
 
 ## Post-Install Validation
 
-After installation, both installers automatically run a validation and self-repair pass. This step verifies that all installed surfaces are intact, MCP base dependencies are present, and Playwright is functional if installed. It runs by default and can be skipped with `--skip-post-install-repair` (shell) or `-SkipPostInstallRepair` (PowerShell).
+After installation, run a validation and self-repair pass. This verifies that all installed surfaces are intact, MCP base dependencies are present, and Playwright is functional if installed.
 
 You can also run it manually at any time:
 

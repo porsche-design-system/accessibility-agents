@@ -21,21 +21,21 @@ Adopt GitHub's native `gh skill` paradigm as the **primary and only** distributi
 
 These utilities replace all installer functionality. Building them first ensures nothing is lost.
 
-- [ ] Create `.github/cli/setup.js` (~300 lines)
+- [ ] Create `go-cli/cmd/setup` (Go binary)
   - [ ] Interactive role/scope/platform selection
   - [ ] Team config JSON support
   - [ ] MCP profile configuration
   - [ ] Logging and summary output
   
-- [ ] Create `.github/cli/health.js` (~200 lines)
-  - [ ] Node.js/Java version checking
+- [ ] Create `go-cli/cmd/health` (Go binary)
+  - [ ] GitHub CLI/Java/optional Node.js version checking
   - [ ] Playwright validation
   - [ ] Agent/skill verification
   - [ ] VS Code integration check
   - [ ] Claude Desktop MCP check
   - [ ] Git hooks status check
   
-- [ ] Create `.github/cli/repair.js` (~200 lines)
+- [ ] Create `go-cli/cmd/repair` (Go binary)
   - [ ] Manifest regeneration
   - [ ] Git hook reinstallation
   - [ ] Configuration validation
@@ -43,7 +43,7 @@ These utilities replace all installer functionality. Building them first ensures
   - [ ] File permission fixes
   - [ ] Version consistency
   
-- [ ] Create `.github/cli/hooks.js` (~150 lines)
+- [ ] Create `go-cli/cmd/hooks` (Go binary)
   - [ ] Pre-commit hook installation
   - [ ] Hook uninstallation
   - [ ] Status checking
@@ -90,17 +90,17 @@ These utilities replace all installer functionality. Building them first ensures
 - [ ] **Delete supporting scripts:**
   - [ ] `scripts/Installer.Common.ps1`
   - [ ] `scripts/installer-common.sh`
-  - [ ] `scripts/install-hooks.js` (replaced by `.github/cli/hooks.js`)
+  - [ ] `scripts/install-hooks.js` (replaced by `go-cli/cmd/hooks`)
 
 - [ ] **Keep and validate:**
   - [x] `plugin.yaml` (already compliant, now with subcommands)
   - [x] `manifest.json` (auto-generated)
   - [x] `.github/agents/*.agent.md` (all 80)
   - [x] `.github/skills/*/SKILL.md` (all 25)
-  - [x] `.github/cli/setup.js` (new)
-  - [x] `.github/cli/health.js` (new)
-  - [x] `.github/cli/repair.js` (new)
-  - [x] `.github/cli/hooks.js` (new)
+  - [ ] `go-cli/cmd/setup` (new)
+  - [ ] `go-cli/cmd/health` (new)
+  - [ ] `go-cli/cmd/repair` (new)
+  - [ ] `go-cli/cmd/hooks` (new)
 
 ### Phase 3: CI/CD Simplification (Week 3)
 
@@ -133,7 +133,7 @@ These utilities replace all installer functionality. Building them first ensures
 
 - [ ] **docs/getting-started.md:** Platform-agnostic
 - [ ] **docs/installation.md:** New file with `gh skill` focus
-- [ ] **docs/cli-utilities.md:** Document setup/health/repair/hooks
+- [ ] **docs/cli-utilities.md:** Document the Go binaries behind setup/health/repair/hooks
 - [ ] **AGENTS.md:** Update "Installation" section
 - [ ] **CLAUDE.md:** Update "Installation" section
 
@@ -203,6 +203,7 @@ plugin.yaml ..................... ✅ Already gh skill compliant
 manifest.json ................... ✅ Auto-generated correctly
 .github/agents/*.agent.md ....... ✅ All 80 agents valid
 .github/skills/*/SKILL.md ....... ✅ All 25 skills valid
+go-cli/ ......................... ✅ Go-based cross-platform utility module
 ```
 
 ---
@@ -338,10 +339,10 @@ Before 5.0.0 release:
 
 **CRITICAL PREREQUISITE:**
 - [ ] Phase 0 COMPLETE: All CLI utilities built and tested
-  - [ ] `.github/cli/setup.js` working
-  - [ ] `.github/cli/health.js` working
-  - [ ] `.github/cli/repair.js` working
-  - [ ] `.github/cli/hooks.js` working
+  - [ ] `go-cli/cmd/setup` working
+  - [ ] `go-cli/cmd/health` working
+  - [ ] `go-cli/cmd/repair` working
+  - [ ] `go-cli/cmd/hooks` working
   - [ ] Feature parity verified with old installer
   - [ ] Multi-platform testing complete
 

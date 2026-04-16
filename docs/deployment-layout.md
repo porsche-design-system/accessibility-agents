@@ -2,6 +2,54 @@
 
 This document explains exactly where Accessibility Agents files are placed on your system for each supported tool. Use it to understand what the installer does, verify your installation, or troubleshoot issues.
 
+## Go Toolchain for 5.0 Deployment
+
+Version 5.0.0 introduces a Go-based CLI layer for `gh skill setup`, `gh skill health`, `gh skill repair`, and `gh skill hooks`. If you are building release artifacts or validating the native binaries locally, install Go before running the build scripts.
+
+### Windows
+
+Install Go with WinGet:
+
+```powershell
+winget install --id GoLang.Go --exact --accept-package-agreements --accept-source-agreements
+```
+
+Then open a new PowerShell window and verify:
+
+```powershell
+go version
+```
+
+Build the Windows binaries from the repository root:
+
+```powershell
+pwsh -NoProfile -File scripts/build-go-cli.ps1
+```
+
+### macOS
+
+Install Go with Homebrew:
+
+```bash
+brew install go
+```
+
+Verify the install:
+
+```bash
+go version
+```
+
+Build the macOS binaries from the repository root:
+
+```bash
+bash scripts/build-go-cli.sh
+```
+
+### Output Location
+
+The build scripts place compiled binaries in `go-cli/bin/`. On Windows the files end in `.exe`. On macOS they are native CLI executables with no `.pkg` packaging step required.
+
 ## Quick Reference: All Tools at a Glance
 
 The following table summarizes every file type and its destination path for each tool. "Project" installs go inside your repository. "Global" installs go in your home directory and apply to every project. Not every tool supports every file type -- empty cells mean that tool does not use that resource type.
@@ -241,7 +289,7 @@ For a global install, check your home directory for `~/.claude/`, `~/.codex/`, a
 
 ## Update Behavior
 
-The updater scripts (`update.ps1` and `update.sh`) handle each tool:
+The GitHub Skills and repair utilities handle each tool:
 
 - **Claude Code**: Syncs agents, skills, rules, and hooks by comparing file contents. Only changed files are overwritten. The `CLAUDE.md` and `AGENTS.md` files are merged using the marked-section approach to preserve your customizations.
 - **VS Code Copilot**: Syncs agents, skills, instructions, and prompts to both `.github/` and any detected VS Code profiles.
@@ -252,7 +300,7 @@ The updater scripts (`update.ps1` and `update.sh`) handle each tool:
 
 ## Uninstall Behavior
 
-The uninstaller scripts (`uninstall.ps1` and `uninstall.sh`) use the manifest file to identify installed resources. For each tool:
+Uninstall uses `gh skill uninstall` and manifest-aware cleanup. For each tool:
 
 - **Claude Code**: Removes agent files, skill directories, rules, and hooks listed in the manifest. Cleans marked sections from `CLAUDE.md`, `AGENTS.md`, and `settings.json`, preserving any user content outside the markers.
 - **VS Code Copilot**: Removes agents, skills, instructions, and prompts from `.github/` and from detected VS Code profiles. Cleans marked sections from `copilot-instructions.md`.
@@ -309,7 +357,7 @@ For global installs, the setting is written to each detected VS Code profile's `
 - Linux Stable: `~/.config/Code/User/settings.json`
 - Linux Insiders: `~/.config/Code - Insiders/User/settings.json`
 
-For project installs, the setting is written to `.vscode/settings.json` inside the project.
+For project installs, MCP server configuration is written to `.vscode/mcp.json` inside the project.
 
 The installer only adds or updates this specific key. All other settings in `settings.json` are preserved.
 

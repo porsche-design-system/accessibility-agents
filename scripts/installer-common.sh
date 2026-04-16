@@ -50,6 +50,8 @@ json_array_from_profiles() {
     local value="$path"
     if [ "$field" = "settings" ]; then
       value="$path/settings.json"
+    elif [ "$field" = "mcp" ]; then
+      value="$path/mcp.json"
     fi
     if [ "$first" = true ]; then
       first=false

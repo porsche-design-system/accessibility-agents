@@ -123,15 +123,14 @@ For most users, start locally first. The default HTTP binding is `127.0.0.1`, so
 }
 ```
 
-### VS Code (settings.json)
+### VS Code (`.vscode/mcp.json`)
 
 ```json
 {
-  "mcp": {
-    "servers": {
-      "a11y-agent-team": {
-        "url": "http://127.0.0.1:3100/mcp"
-      }
+  "servers": {
+    "a11y-agent-team": {
+      "type": "http",
+      "url": "http://127.0.0.1:3100/mcp"
     }
   }
 }

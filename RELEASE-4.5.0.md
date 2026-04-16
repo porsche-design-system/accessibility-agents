@@ -285,13 +285,15 @@ The following table summarizes the scope of the 4.5.0 release.
 ### Windows (PowerShell)
 
 ```powershell
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.ps1 | iex
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 ### macOS (Bash)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 ### Claude Code
@@ -312,10 +314,10 @@ gemini update accessibility-agents
 cd mcp-server && npm install
 ```
 
-You can also run with `--dry-run` first to see what would change before committing:
+You can run health checks before or after setup to verify readiness:
 
-```powershell
-.\install.ps1 -DryRun
+```bash
+gh skill health Community-Access/accessibility-agents
 ```
 
 ---
@@ -343,7 +345,7 @@ Fixed a critical issue where the `irm | iex` one-liner installation command fail
 - Each call checks `$LASTEXITCODE` and throws on failure for proper try/catch integration
 - The `irm | iex` pipeline now works reliably without stdout interference
 
-**Who is affected:** Anyone installing via the one-liner `irm https://raw.githubusercontent.com/.../install.ps1 | iex`. Direct `.\install.ps1` execution was not affected.
+**Who is affected:** Anyone installing via the legacy PowerShell one-liner path. Direct local script execution was not affected.
 
 See [Issue #93](https://github.com/Community-Access/accessibility-agents/issues/93) for details.
 

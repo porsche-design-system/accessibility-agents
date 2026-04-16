@@ -313,14 +313,11 @@ For npm installations:
 npm update @a11y-agent-team/mcp-server
 ```
 
-For Copilot/Claude Code agent files, run the installer:
+For Copilot/Claude Code agent files, run setup:
 
 ```sh
-# Windows
-.\install.ps1
-
-# macOS / Linux
-./install.sh
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 ---

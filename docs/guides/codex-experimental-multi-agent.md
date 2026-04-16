@@ -72,8 +72,8 @@ This is **Phase 1** support. It intentionally ports a small, high-value set of r
 Use the normal Codex install path:
 
 ```bash
-bash install.sh --project --codex
-bash install.sh --global --codex
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 That installs:

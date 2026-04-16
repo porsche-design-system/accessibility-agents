@@ -11,27 +11,21 @@ The primary distribution method. All agents, skills, and configuration are store
 **Install:**
 
 ```bash
-# macOS
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash
-
-# Windows (PowerShell)
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.ps1 | iex
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 **Update:**
 
 ```bash
-# macOS
-bash update.sh
-
-# Windows
-.\update.ps1
+gh extension upgrade gh-skill
+gh skill setup Community-Access/accessibility-agents
 ```
 
 **Advantages:**
 
 - Full agent set with all configuration
-- Auto-update support via `update.sh` / `update.ps1`
+- Update support via `gh skill` commands
 - Works for Claude Code, Copilot, Claude Desktop, and Codex CLI simultaneously
 - Git-based versioning and rollback
 
@@ -179,12 +173,12 @@ git clone --branch v1.0.0 https://github.com/Community-Access/accessibility-agen
 
 ### Auto-Update
 
-The `update.sh` / `update.ps1` scripts pull the latest from the default branch. To pin:
+`gh skill` follows the installed skill source. To pin, install from a tagged checkout:
 
 ```bash
-# Edit update.sh to specify a branch or tag
-git -C "$INSTALL_DIR" fetch origin
-git -C "$INSTALL_DIR" checkout v1.0.0
+git clone --branch v1.0.0 https://github.com/Community-Access/accessibility-agents.git
+cd accessibility-agents
+gh skill install .
 ```
 
 ## File Size Reference

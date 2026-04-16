@@ -689,7 +689,8 @@ def test_allow_ui_file_with_review():
 
 ```powershell
 # Install hooks
-.\install.ps1 --project
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents --scope project
 
 # Verify hook files exist
 Test-Path .github\hooks\hooks-consolidated.json
@@ -703,7 +704,8 @@ Test-Path .github\hooks\scripts\enforce-edit-gate.py
 
 ```bash
 # Install hooks
-bash install.sh --global
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents --scope global
 
 # Verify hook files exist
 test -f ~/.claude/settings.json

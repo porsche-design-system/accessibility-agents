@@ -2,6 +2,63 @@
 
 This guide covers installation and setup for all supported platforms: Claude Code, GitHub Copilot (VS Code and CLI), Gemini CLI, Claude Desktop, and Codex CLI.
 
+## Building the 5.0 Native CLI
+
+Accessibility Agents 5.0 introduces a Go-based native CLI layer for `gh skill setup`, `gh skill health`, `gh skill repair`, and `gh skill hooks`. End users do not need Go to consume released binaries, but contributors and release engineers need Go installed to build and validate those executables locally.
+
+### Windows
+
+Install Go with WinGet:
+
+```powershell
+winget install --id GoLang.Go --exact --accept-package-agreements --accept-source-agreements
+```
+
+Open a new terminal and verify:
+
+```powershell
+go version
+```
+
+Build the Windows binaries from the repository root:
+
+```powershell
+pwsh -NoProfile -File scripts/build-go-cli.ps1
+```
+
+This produces:
+
+- `go-cli/bin/a11y-agents-setup.exe`
+- `go-cli/bin/a11y-agents-health.exe`
+- `go-cli/bin/a11y-agents-repair.exe`
+- `go-cli/bin/a11y-agents-hooks.exe`
+
+### macOS
+
+Install Go with Homebrew:
+
+```bash
+brew install go
+```
+
+Verify the install:
+
+```bash
+go version
+```
+
+Build the macOS binaries from the repository root:
+
+```bash
+bash scripts/build-go-cli.sh
+```
+
+This produces native CLI binaries in `go-cli/bin/` with no `.pkg` packaging step required.
+
+### Important Note About Node.js
+
+Node.js is still required for the MCP server itself. It is not required to build or run the new Go-based setup, health, repair, and hooks utilities.
+
 ## Source Attribution
 
 This guide is maintained against official platform documentation and release notes.
@@ -60,89 +117,37 @@ bash --version          # macOS only
 # Update Claude Code CLI
 claude code update
 
-# Update Accessibility Agents
+# Update Accessibility Agents repository
 cd accessibility-agents
 git pull origin main
-bash update.sh
+
+# Update GitHub Skills extension
+gh extension upgrade gh-skill
 ```
 
 ### Installation
 
-#### One-Liner (Recommended)
-
-**macOS:**
+Use the GitHub Skills installer path:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
-**Windows (PowerShell):**
-
-```powershell
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.ps1 | iex
-```
-
-The installer downloads the repo, copies agents, installs the three enforcement hooks to `~/.claude/hooks/`, registers them in `~/.claude/settings.json`, and optionally sets up daily auto-updates and GitHub Copilot agents. It will prompt you to choose project-level or global install.
-
-**Non-interactive one-liners:**
+Validate and repair as needed:
 
 ```bash
-# macOS - install globally, no prompts
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash -s -- --global
-
-# macOS - install to current project, no prompts
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash -s -- --project
-
-# macOS - install globally with Copilot agents
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash -s -- --global --copilot
+gh skill health Community-Access/accessibility-agents
+gh skill repair Community-Access/accessibility-agents
 ```
 
-#### From Cloned Repo
-
-If you prefer to clone first:
-
-**macOS:**
+To uninstall:
 
 ```bash
-git clone https://github.com/Community-Access/accessibility-agents.git
-cd a11y-agent-team
-bash install.sh
+gh skill uninstall Community-Access/accessibility-agents
 ```
 
-Pass flags to skip prompts: `--global`, `--project`, `--copilot`, `--codex`.
-
-For unattended installs and validation, the installers and uninstallers also support `--yes` / `-Yes`, `--no-auto-update` / `-NoAutoUpdate`, `--dry-run`, `--check`, and `--summary <path>` or `-SummaryPath <path>`.
-
-**Windows (PowerShell):**
-
-```powershell
-git clone https://github.com/Community-Access/accessibility-agents.git
-cd a11y-agent-team
-powershell -ExecutionPolicy Bypass -File install.ps1
-```
-
-The `--copilot` flag installs the accessibility agents for GitHub Copilot Chat. For **global** installs, this copies `.agent.md` files directly into your VS Code user profile so the agents appear in the Copilot Chat agent picker across all workspaces. For **project** installs, it copies them into the project's `.github/agents/` directory.
-
-`--dry-run` writes a plan summary without making changes. `--check` goes one step further than basic argument validation: it resolves targets, records candidate paths, and writes backup metadata while still making no filesystem changes. Both modes emit JSON summary files so you can inspect exactly what the script would touch.
-
-Each install, update, and uninstall operation now writes:
-
-- A summary JSON file with normalized fields such as `schemaVersion`, `timestampUtc`, `operation`, `dryRun`, `check`, `requestedOptions`, and `backupMetadataPath`
-- A backup metadata JSON file referenced by `backupMetadataPath`, listing the candidate paths the operation considered and which ones already existed before execution
-
-For project installs, the default summary file is written into the current repository. For global installs, the default summary file is written under your user profile root.
-
-To remove:
-
-```bash
-bash uninstall.sh
-bash uninstall.sh --global    # Non-interactive global uninstall
-bash uninstall.sh --project   # Non-interactive project uninstall
-```
-
-```powershell
-powershell -ExecutionPolicy Bypass -File uninstall.ps1
-```
+Legacy script installers and uninstallers were removed in this branch.
 
 #### Manual Setup
 
@@ -236,16 +241,12 @@ Update log is saved to `~/.claude/.a11y-agent-team-update.log`.
 
 You can also run updates manually at any time:
 
-macOS:
+All platforms:
 
 ```bash
-bash update.sh
-```
-
-Windows:
-
-```powershell
-powershell -File update.ps1
+gh extension upgrade gh-skill
+cd accessibility-agents
+git pull origin main
 ```
 
 Auto-updates are fully removed when you run the uninstaller.
@@ -384,7 +385,7 @@ code --version    # Should show latest stable VS Code release
 # Update Accessibility Agents
 cd accessibility-agents
 git pull origin main
-bash update.sh
+gh extension upgrade gh-skill
 ```
 
 ### Installation
@@ -394,9 +395,8 @@ bash update.sh
 The easiest way to get Copilot agents in every workspace.
 
 ```bash
-git clone https://github.com/Community-Access/accessibility-agents.git
-cd a11y-agent-team
-bash install.sh --global --copilot
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 This installs Copilot agents to your VS Code user profile folder. After installing, reload VS Code and open Copilot Chat. The agents will appear in the agent picker dropdown across all workspaces.
@@ -413,11 +413,11 @@ cd a11y-agent-team
 cp -r .github /path/to/your/project/
 ```
 
-Or use the installer with the project flag:
+Or run setup inside that project:
 
 ```bash
 cd /path/to/your/project
-bash /path/to/a11y-agent-team/install.sh --project --copilot
+gh skill setup Community-Access/accessibility-agents --scope project
 ```
 
 #### Option 3: Per-project (via a11y-copilot-init)
@@ -636,10 +636,10 @@ cp accessibility-agents/.github/agents/*.agent.md ~/.copilot/agents/
 cp -r accessibility-agents/.github/skills/* ~/.copilot/skills/
 ```
 
-Or use the installer with the `--cli` flag:
+Or use setup mode after installing the skill:
 
 ```bash
-bash install.sh --global --cli
+gh skill setup Community-Access/accessibility-agents
 ```
 
 ### Using Agents in Copilot CLI
@@ -812,7 +812,7 @@ The A11y Agent Team extension adds:
 # Update Accessibility Agents
 cd accessibility-agents
 git pull origin main
-bash update.sh
+gh extension upgrade gh-skill
 ```
 
 ### How to Install
@@ -876,28 +876,24 @@ codex --version    # Should show latest stable release
 # Update Accessibility Agents
 cd accessibility-agents
 git pull origin main
-bash update.sh
+gh extension upgrade gh-skill
 ```
 
 ### Installation
 
-#### Via the Installer (Recommended)
+#### Via GitHub Skill Setup (Recommended)
 
 ```bash
-# Project install with Codex support
-bash install.sh --project --codex
-
-# Global install with Codex support
-bash install.sh --global --codex
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
-The interactive installer also prompts for Codex support if you do not pass the flag. Codex installs include the stable `.codex/AGENTS.md` baseline and, when available, the experimental `.codex/config.toml` plus `.codex/roles/*.toml` files.
+Codex installs include the stable `.codex/AGENTS.md` baseline and, when available, the experimental `.codex/config.toml` plus `.codex/roles/*.toml` files.
 
 #### One-Liner
 
 ```bash
-# Install globally with Codex support
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash -s -- --global --codex
+gh skill install Community-Access/accessibility-agents && gh skill setup Community-Access/accessibility-agents
 ```
 
 #### Manual Setup
@@ -935,9 +931,7 @@ For the current role list, install details, and limitations, see [Experimental C
 ### Removing
 
 ```bash
-bash uninstall.sh          # Interactive — detects and removes Codex support
-bash uninstall.sh --project  # Non-interactive project uninstall
-bash uninstall.sh --global   # Non-interactive global uninstall
+gh skill uninstall Community-Access/accessibility-agents
 ```
 
 ---
@@ -974,19 +968,16 @@ gemini --version    # Should show latest stable release
 # Update Accessibility Agents
 cd accessibility-agents
 git pull origin main
-bash update.sh
+gh extension upgrade gh-skill
 ```
 
 ### Installation
 
-#### Via the Installer (Recommended)
+#### Via GitHub Skill Setup (Recommended)
 
 ```bash
-# Project install with Gemini support
-bash install.sh --project --gemini
-
-# Global install with Gemini support
-bash install.sh --global --gemini
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 **Windows (PowerShell):**
@@ -996,8 +987,7 @@ The interactive installer also prompts for Gemini support.
 #### One-Liner
 
 ```bash
-# Install globally with Gemini support
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash -s -- --global --gemini
+gh skill install Community-Access/accessibility-agents && gh skill setup Community-Access/accessibility-agents
 ```
 
 #### Manual Setup

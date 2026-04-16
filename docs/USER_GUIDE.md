@@ -124,17 +124,8 @@ This copies agents, skills, prompts, instructions, and workspace settings into y
 **Option B — Global (recommended for individuals):**
 
 ```bash
-git clone https://github.com/Community-Access/accessibility-agents.git
-cd accessibility-agents
-bash install.sh --global --copilot
-```
-
-On Windows:
-
-```powershell
-git clone https://github.com/Community-Access/accessibility-agents.git
-cd accessibility-agents
-powershell -ExecutionPolicy Bypass -File install.ps1
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 ### GitHub Copilot Step 3: Verify
@@ -185,9 +176,8 @@ Agents are invoked by selecting them from the agent picker or by mentioning `@ag
 **Global install (all projects):**
 
 ```bash
-git clone https://github.com/Community-Access/accessibility-agents.git
-cd accessibility-agents
-bash install.sh --global --cli
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 This copies agents to `~/.copilot/agents/` and skills to `~/.copilot/skills/`.
@@ -235,16 +225,8 @@ Use the accessibility-lead agent to review src/components/ for accessibility iss
 
 **One-liner (recommended):**
 
-macOS:
-
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash
-```
-
-Windows (PowerShell):
-
-```powershell
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.ps1 | iex
+gh skill install Community-Access/accessibility-agents && gh skill setup Community-Access/accessibility-agents
 ```
 
 This installs 80 agents to `~/.claude/agents/` and sets up three enforcement hooks.
@@ -335,9 +317,8 @@ Gemini doesn't have a native "agent" concept like Copilot or Claude Code. Instea
 ### Codex CLI Step 2: Install
 
 ```bash
-git clone https://github.com/Community-Access/accessibility-agents.git
-cd accessibility-agents
-bash install.sh --codex
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 ```
 
 Codex uses role files in `.codex/` — 11 predefined roles are included.

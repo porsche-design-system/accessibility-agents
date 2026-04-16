@@ -177,15 +177,12 @@ git push origin main
 
 ### Installation
 
-Available in VS Code Extensions marketplace or via script installation:
+Available in VS Code Extensions marketplace or via GitHub Skills:
 
 ```bash
-# macOS
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash
-
-# Windows (PowerShell)
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.ps1 | iex
-```text
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
+```
 
 ### Key Features
 
@@ -267,12 +264,9 @@ All agents cite authoritative sources (W3C WCAG, ARIA, vendor documentation) and
 ## Installation
 
 ```bash
-# macOS
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash
-
-# Windows (PowerShell)
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.ps1 | iex
-```text
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
+```
 
 Or install from VS Code Extensions marketplace (coming soon #370).
 
@@ -412,17 +406,12 @@ Then create release notes on GitHub:
 2. Search "accessibility-agents"
 3. Click "Install"
 
-### Script Installation (Alternative)
-**macOS**
+### GitHub Skills Installation (Alternative)
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.sh | bash
-```text
-
-**Windows (PowerShell)**
-
-```powershell
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.ps1 | iex
-```text
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
+```
 
 ## Key Improvements in v4.0.0
 

@@ -222,25 +222,7 @@ Detecting issues...
 ## New vs Old: Side-by-Side
 
 ### 4.6.0 Installation
-```bash
-# Download and run installer (platform-specific)
-irm https://raw.githubusercontent.com/..../install.ps1 | iex -Force
-
-# Installer prompts for all options
-→ Global or Project? 
-→ Role?
-→ Platforms?
-→ Team config?
-
-# Installer does everything in one go
-→ 2,000+ line script handles Windows/Mac/Linux
-→ Complex logic for each platform
-→ Error handling for each platform
-→ Manual repair if something breaks
-
-# Updates are manual
-.\install.ps1 -Force
-```
+Legacy script-based installation (removed in 5.0.0) used platform-specific installer scripts with prompt-driven options.
 
 ### 5.0.0 Installation
 ```bash
@@ -251,10 +233,10 @@ gh skill install Community-Access/accessibility-agents
 gh skill setup Community-Access/accessibility-agents
 
 # Utilities handle everything, platform-agnostic
-→ setup.js (~300 lines) handles configuration
-→ health.js (~200 lines) handles validation
-→ repair.js (~200 lines) handles fixes
-→ hooks.js (~150 lines) handles git integration
+→ Go setup binary handles configuration
+→ Go health binary handles validation
+→ Go repair binary handles fixes
+→ Go hooks binary handles git integration
 → Total: ~850 lines (vs 6,767 lines in old installer!)
 
 # Updates are automatic

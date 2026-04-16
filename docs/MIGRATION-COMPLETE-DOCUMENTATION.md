@@ -35,29 +35,29 @@
 ### 4. **CLI-UTILITIES-SPECIFICATION.md** — The Replacements
 Specifies 4 focused utilities (~850 lines total) that replace old installer:
 
-**`setup.js`** (~300 lines) — Interactive configuration wizard
+**Go setup binary** — Interactive configuration wizard
 - Role selection (developer/reviewer/author/full/custom)
 - Scope selection (global/project)
 - Platform preferences (VS Code/Claude/Codex/Gemini)
 - Team config JSON support
 - MCP profile setup
 
-**`health.js`** (~200 lines) — Runtime validation
-- Node.js/Java version checking
+**Go health binary** — Runtime validation
+- GitHub CLI/Java checks plus optional Node.js verification for MCP users
 - Playwright browser validation
 - Agent/skill file verification
 - VS Code integration status
 - Claude Desktop MCP status
 - Git hooks status
 
-**`repair.js`** (~200 lines) — Fix broken installations
+**Go repair binary** — Fix broken installations
 - Regenerate manifests
 - Reinstall Git hooks
 - Fix configuration
 - Sync MCP profiles
 - Fix file permissions
 
-**`hooks.js`** (~150 lines) — Git hook management
+**Go hooks binary** — Git hook management
 - Install/uninstall pre-commit hooks
 - Global hook registration
 - Status checking
@@ -102,10 +102,10 @@ Specifies 4 focused utilities (~850 lines total) that replace old installer:
 
 **Must complete Phase 0 BEFORE proceeding to Phase 2 (delete old code)**
 
-- [ ] Build `.github/cli/setup.js`
-- [ ] Build `.github/cli/health.js`
-- [ ] Build `.github/cli/repair.js`
-- [ ] Build `.github/cli/hooks.js`
+- [ ] Build `go-cli/cmd/setup`
+- [ ] Build `go-cli/cmd/health`
+- [ ] Build `go-cli/cmd/repair`
+- [ ] Build `go-cli/cmd/hooks`
 - [ ] Test on Windows/macOS/Linux
 - [ ] Verify feature parity with old installer
 - [ ] Document each utility
@@ -173,7 +173,7 @@ Time reduction: 360 seconds → 50 seconds (85% faster)
 
 These will be done in Phase 0 (implementation PR):
 
-- [ ] The actual utility code (setup.js, health.js, repair.js, hooks.js)
+- [ ] The actual Go utility code (setup, health, repair, hooks)
 - [ ] Testing of utilities
 - [ ] Deletion of old installers
 - [ ] CI/CD changes

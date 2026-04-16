@@ -6,28 +6,13 @@ This guide walks you through removing Accessibility Agents from every platform, 
 
 Before going manual, try the automated uninstaller first:
 
-**Windows (PowerShell):**
-
-```powershell
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/uninstall.ps1 | iex
-```
-
-**macOS:**
-
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/uninstall.sh | bash
+gh skill uninstall Community-Access/accessibility-agents
 ```
 
 If that did not fully clean up, follow the manual steps below for each platform you installed.
 
-The automated scripts also write a summary or plan file by default:
-
-- Project scope: `.a11y-agent-team-uninstall-summary.json` or `.a11y-agent-team-uninstall-plan.json`
-- Global scope: the same file names under your home directory
-
-Use `--summary=...` on shell scripts to change that location.
-
-For PowerShell uninstall, use `-SummaryPath <path>`, `--summary <path>`, or `--summary=...`. The spaced form is the safest option for absolute Windows paths such as `C:\temp\uninstall-summary.json`.
+The legacy shell/PowerShell uninstall scripts were removed. Use the `gh skill` path above.
 
 ---
 
@@ -308,13 +293,11 @@ On Windows:
 Remove-Item .\mcp-server -Recurse -Force -ErrorAction SilentlyContinue
 ```
 
-Then remove the MCP entry from `.vscode/settings.json`. Open the file and delete the `a11y-agent-team` key from the `mcp.servers` block:
+Then remove the MCP entry from `.vscode/mcp.json`. Open the file and delete the `a11y-agent-team` key from the `servers` block:
 
 ```json
-"mcp": {
-    "servers": {
-        "a11y-agent-team": { ... }  // <-- delete this entire entry
-    }
+"servers": {
+    "a11y-agent-team": { ... }  // <-- delete this entire entry
 }
 ```
 
@@ -334,7 +317,7 @@ On Windows:
 Remove-Item "$env:USERPROFILE\.a11y-agent-team\mcp-server" -Recurse -Force -ErrorAction SilentlyContinue
 ```
 
-Then remove the MCP entry from your VS Code User settings (`settings.json`). Open the file (Ctrl+Shift+P then "Preferences: Open User Settings (JSON)") and delete the `a11y-agent-team` key from the `mcp.servers` block.
+Then remove the MCP entry from your VS Code User MCP configuration (`mcp.json`). Open Command Palette and run **MCP: Open User Configuration**, then delete the `a11y-agent-team` key from the `servers` block.
 
 **How to verify:** In VS Code, press Ctrl+Shift+P and type "MCP: List Servers". The `a11y-agent-team` server should not appear.
 

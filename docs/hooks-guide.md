@@ -35,18 +35,11 @@ The following table lists each supported platform, whether hooks are active, and
 
 ## Installation
 
-Hooks are installed automatically when you run `install.sh` or `install.ps1` with project installation.
-
-macOS:
+Hooks are installed automatically when you run skill setup in a project.
 
 ```bash
-bash install.sh --project
-```
-
-Windows (PowerShell):
-
-```powershell
-.\install.ps1 -Project
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents --scope project
 ```
 
 This creates:

@@ -174,7 +174,8 @@ npx github:microsoft/agentrc readiness
 
 ```bash
 # Install to local Copilot CLI
-./install.sh --global --cli
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
 
 # Verify agents load
 copilot /agent

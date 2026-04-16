@@ -24,10 +24,10 @@
 
 2. **CLI-UTILITIES-SPECIFICATION.md** (598 lines)
    - Complete specs for 4 replacement utilities:
-     * `setup.js` (~300 lines) — Role/scope/platform config
-     * `health.js` (~200 lines) — Runtime validation  
-     * `repair.js` (~200 lines) — Installation repair
-     * `hooks.js` (~150 lines) — Git hook management
+   * Go setup binary — Role/scope/platform config
+   * Go health binary — Runtime validation
+   * Go repair binary — Installation repair
+   * Go hooks binary — Git hook management
    - Total: ~850 lines (vs 6,767 old installer)
    - Ready for Phase 0 implementation
 

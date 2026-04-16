@@ -88,7 +88,7 @@ gh skill upgrade --auto-update Community-Access/accessibility-agents
 ### For Current 4.6.0 Users
 
 **Migration path:**
-1. Uninstall old version: `irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/uninstall.ps1 | iex`
+1. Uninstall old version: `gh skill uninstall Community-Access/accessibility-agents`
 2. Install `gh` CLI (see above)
 3. Install 5.0.0: `gh skill install Community-Access/accessibility-agents`
 
@@ -165,12 +165,7 @@ docs/installation.md .................. ✅ New (gh skill focused)
 
 ### If You're Building on This
 
-**Old integration:**
-```bash
-irm https://raw.githubusercontent.com/Community-Access/accessibility-agents/main/install.ps1 | iex
-```
-
-**New integration:**
+Use this integration path:
 ```bash
 gh skill install Community-Access/accessibility-agents
 ```
@@ -189,7 +184,7 @@ Or in your CI/CD:
 
 ### What This Means
 
-Accessibility Agents 5.0.0 **fully complies** with [GitHub Skills Specification](https://github.com/github/gh-skills) requirements:
+Accessibility Agents 5.0.0 **fully complies** with [GitHub Skills Specification](GITHUB-SKILLS-SPEC-QUICK-REFERENCE.md) requirements:
 
 | Requirement | Status | Notes |
 |-------------|--------|-------|

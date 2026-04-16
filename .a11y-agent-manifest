@@ -194,7 +194,6 @@ copilot-prompts/alt-text-headings.prompt.md
 copilot-prompts/analytics.prompt.md
 copilot-prompts/aria-specialist.prompt.md
 copilot-prompts/audit-changed-documents.prompt.md
-copilot-prompts/audit-desktop-a11y.prompt.md
 copilot-prompts/audit-document-conversion.prompt.md
 copilot-prompts/audit-document-folder.prompt.md
 copilot-prompts/audit-email-template.prompt.md
@@ -202,7 +201,6 @@ copilot-prompts/audit-media-content.prompt.md
 copilot-prompts/audit-native-app.prompt.md
 copilot-prompts/audit-single-document.prompt.md
 copilot-prompts/audit-web-multi-page.prompt.md
-copilot-prompts/audit-web-page.prompt.md
 copilot-prompts/build-a11y-template.prompt.md
 copilot-prompts/build-template.prompt.md
 copilot-prompts/ci-accessibility.prompt.md
@@ -267,7 +265,6 @@ copilot-prompts/nvda-addon-specialist.prompt.md
 copilot-prompts/office-scan-config.prompt.md
 copilot-prompts/onboard-repo.prompt.md
 copilot-prompts/onboard-team.prompt.md
-copilot-prompts/package-python-app.prompt.md
 copilot-prompts/pdf-accessibility.prompt.md
 copilot-prompts/pdf-remediator.prompt.md
 copilot-prompts/pdf-scan-config.prompt.md
@@ -288,8 +285,6 @@ copilot-prompts/release-prep.prompt.md
 copilot-prompts/repo-admin.prompt.md
 copilot-prompts/repo-manager.prompt.md
 copilot-prompts/review-pr.prompt.md
-copilot-prompts/scaffold-nvda-addon.prompt.md
-copilot-prompts/scaffold-wxpython-app.prompt.md
 copilot-prompts/scanner-bridge.prompt.md
 copilot-prompts/screen-reader-lab.prompt.md
 copilot-prompts/security-dashboard.prompt.md
@@ -302,7 +297,6 @@ copilot-prompts/tables-data-specialist.prompt.md
 copilot-prompts/team-dashboard.prompt.md
 copilot-prompts/team-manager.prompt.md
 copilot-prompts/template-builder.prompt.md
-copilot-prompts/test-desktop-a11y.prompt.md
 copilot-prompts/testing-coach.prompt.md
 copilot-prompts/text-quality-reviewer.prompt.md
 copilot-prompts/training-scenario.prompt.md

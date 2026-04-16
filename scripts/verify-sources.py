@@ -118,7 +118,7 @@ def extract_urls(file_path: Path) -> List[Tuple[str, int]]:
                         continue
                     urls.append((url, line_num))
     except (UnicodeDecodeError, IOError) as e:
-        print(f"⚠️ Error reading {file_path}: {e}", file=sys.stderr)
+        print(f"[WARN] Error reading {file_path}: {e}", file=sys.stderr)
     
     return urls
 
@@ -259,14 +259,14 @@ def main():
         json.dump(results, f, indent=2)
     
     # Print summary
-    print(f"\n✅ Valid:      {results['valid']}")
-    print(f"⚠️  Redirects: {results['redirects']}")
-    print(f"🚫 Blocked:    {results['blocked']}")
-    print(f"❌ Broken:     {results['broken']}")
-    print(f"⏭️  Skipped:    {results['skipped']}")
+    print(f"\n[OK] Valid:      {results['valid']}")
+    print(f"[WARN] Redirects: {results['redirects']}")
+    print(f"[BLOCKED] Blocked:   {results['blocked']}")
+    print(f"[FAIL] Broken:    {results['broken']}")
+    print(f"[SKIP] Skipped:    {results['skipped']}")
     
     if results['broken'] > 0:
-        print(f"\n❌ {results['broken']} broken link(s) found:")
+        print(f"\n[FAIL] {results['broken']} broken link(s) found:")
         for link in results['broken_links']:
             status_label = {
                 0: 'Connection Error',
@@ -279,9 +279,9 @@ def main():
         return 1
     
     if results['redirects'] > 0:
-        print(f"\n⚠️  {results['redirects']} redirect(s) to review:")
+        print(f"\n[WARN] {results['redirects']} redirect(s) to review:")
         for link in results['redirect_links'][:5]:  # Show first 5
-            print(f"  {link['file']}:{link['line']} - HTTP {link['status']} → {link['final_url']}")
+            print(f"  {link['file']}:{link['line']} - HTTP {link['status']} -> {link['final_url']}")
         if len(results['redirect_links']) > 5:
             print(f"  ... and {len(results['redirect_links']) - 5} more")
     
