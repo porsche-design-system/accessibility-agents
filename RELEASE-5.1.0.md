@@ -21,7 +21,8 @@ The solution is the **specialist dispatch pattern**:
 
 When an orchestrator needs a specialist, it does two things:
 
-```text    # load the specialist
+```text
+1. Read(".claude/specialists/contrast-master.md")    # load the specialist
 2. Task(prompt="<specialist_body>\n\n<your context>") # invoke it as a subagent
 ```
 
