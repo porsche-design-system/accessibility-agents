@@ -7,25 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.0] - 2026-05-06
+
 ### Added
 
-- **CI integrity guard workflow**: `.github/workflows/ci-integrity-guards.yml` now validates workflow invariants, config/schema integrity, and documentation version pin freshness.
-- **New guard scripts**:
-  - `scripts/validate-workflow-invariants.mjs`
-  - `scripts/validate-config-integrity.mjs`
-  - `scripts/validate-doc-version-pins.mjs`
-- **Playwright high-impact workflow**: `.github/workflows/playwright-high-impact-check.yml` adds runtime-focused checks for serious failures.
-- **Playwright high-impact runner**: `mcp-server/scripts/playwright-high-impact-check.mjs` outputs JSON and markdown artifacts for severe runtime accessibility risk signals.
-- **Office/PDF/EPUB local schemas** added under `.github/schemas/` and wired into templates plus VS Code schema mapping.
+- **CI integrity guard workflow**: `.github/workflows/ci-integrity-guards.yml` validates workflow invariants, config/schema integrity, and documentation version pin freshness on every push and PR.
+- **Guard scripts**:
+  - `scripts/validate-workflow-invariants.mjs` - asserts CI job ordering and required steps
+  - `scripts/validate-config-integrity.mjs` - verifies scan config templates against JSON schemas
+  - `scripts/validate-doc-version-pins.mjs` - detects stale version references in documentation
+  - `scripts/release-readiness-check.mjs` - aggregated pre-release check that runs all three validators
+- **Playwright high-impact workflow**: `.github/workflows/playwright-high-impact-check.yml` adds runtime accessibility checks targeting the highest-severity failure classes.
+- **Playwright high-impact runner**: `mcp-server/scripts/playwright-high-impact-check.mjs` scans at four viewports (320/768/1024/1440), checks keyboard trap heuristics, overflow, and touch targets, and outputs JSON and markdown artifacts.
+- **Office/PDF/EPUB JSON schemas** under `.github/schemas/` (`office-config.schema.json`, `pdf-config.schema.json`, `epub-config.schema.json`) wired into all template files and VS Code `settings.json` for in-editor validation.
+- **Branch hygiene workflow**: `.github/workflows/branch-hygiene-report.yml` reports stale long-lived release branches.
 - **New guides**:
   - `docs/guides/playwright-high-impact-checks.md`
   - `docs/guides/ci-integrity-guards.md`
+  - `docs/guides/release-communications-checklist.md`
+- **Playwright integration doc**: `docs/tools/playwright-integration.md` covers setup, configuration, and CI integration patterns.
 
 ### Changed
 
-- **PR template release checklist** expanded to include version alignment, release notes structure, and action tag freshness checks.
+- **PR template release checklist** expanded with version alignment, release notes structure, and action tag freshness checks.
 - **Template schema references** for Office/PDF/EPUB profiles now point to local repository schema files.
-- **Documentation refresh** across `README.md`, `docs/getting-started.md`, `docs/USER_GUIDE.md`, and `prd.md` to cover CI guard rails and high-impact Playwright checks.
+- **Release communications checklist** updated to include CI integrity guard and branch hygiene steps.
+- **Documentation refresh** across `README.md`, `docs/getting-started.md`, `docs/USER_GUIDE.md`, and `prd.md` to cover new CI guard rails and high-impact Playwright checks.
 
 ## [5.3.0] - 2026-05-07
 
