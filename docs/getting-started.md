@@ -75,6 +75,57 @@ When a setting or feature changes upstream, this guide should be updated with th
 
 ---
 
+## Markdown Accessibility CI Controls
+
+The markdown accessibility scanner now supports repository-level configuration and machine-readable output.
+
+### Repository Config File
+
+Create `.a11y-markdown-config.json` in the repository root:
+
+You can start from `templates/markdown-config-moderate.json`.
+
+```json
+{
+  "ignoredDirs": ["node_modules", ".git", "dist", "build", "codex-skills"],
+  "maxIssuesPerRule": 30,
+  "failOn": "error",
+  "rules": {
+    "md-table-desc": { "enabled": true, "severity": "warning" },
+    "md-link-ambiguous": { "enabled": true, "severity": "warning" },
+    "md-emoji-heading": { "enabled": false, "severity": "warning" }
+  },
+  "output": {
+    "format": "both",
+    "sarifPath": "artifacts/markdown-a11y.sarif"
+  }
+}
+```
+
+### CLI Usage
+
+```bash
+node .github/scripts/markdown-a11y-lint.mjs . --fail-on error --format both --output artifacts/markdown-a11y.sarif
+node .github/scripts/markdown-a11y-lint.mjs . --config .a11y-markdown-config.json --fail-on warning
+```
+
+### CI Enforcement Modes
+
+`a11y-check.yml` supports these markdown gate modes:
+
+- `none`: report only, never fail the markdown lint job
+- `error`: fail only on error-level findings
+- `warning`: fail on warnings and errors
+
+Set default behavior with repository variables:
+
+- `A11Y_MARKDOWN_FAIL_ON` = `none|error|warning`
+- `A11Y_MARKDOWN_FORMAT` = `text|sarif|both`
+
+You can override both via `workflow_dispatch` inputs when running the workflow manually.
+
+---
+
 ## Claude Code Setup
 
 This is for the **Claude Code CLI** (the terminal tool). If you want the Claude Desktop app extension, skip to [Claude Desktop Setup](#claude-desktop-setup) below.

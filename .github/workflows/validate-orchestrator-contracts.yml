@@ -1,0 +1,32 @@
+name: Validate Orchestrator Contracts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.claude/agents/**'
+      - '.claude/specialists/**'
+      - 'scripts/validate-orchestrator-dispatch.js'
+      - '.github/workflows/validate-orchestrator-contracts.yml'
+  pull_request:
+    paths:
+      - '.claude/agents/**'
+      - '.claude/specialists/**'
+      - 'scripts/validate-orchestrator-dispatch.js'
+      - '.github/workflows/validate-orchestrator-contracts.yml'
+
+jobs:
+  validate-dispatch-contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Validate orchestrator-specialist dispatch contracts
+        run: node scripts/validate-orchestrator-dispatch.js

@@ -156,6 +156,48 @@ description: What this skill provides
 Skill content in markdown...
 ```
 
+### Recommended Metadata (2026)
+
+Use `metadata` for stable machine-readable attributes that improve routing, validation, and release reporting.
+
+Agent frontmatter example:
+
+```yaml
+---
+name: agent-name
+description: What this agent does
+tools: ['read', 'edit', 'search']
+metadata:
+  owner: accessibility-team
+  domain: web|document|github|developer
+  maturity: stable|beta|experimental
+  release-phase: ga|preview
+  capability-tags: ["wcag-2.2", "keyboard", "forms"]
+  dispatch-contract: required|optional
+---
+```
+
+Skill frontmatter example:
+
+```yaml
+---
+name: skill-name
+description: What this skill provides
+metadata:
+  spec-version: "2026-05"
+  model-compatibility: ["copilot", "claude", "gemini"]
+  scoring-model: "v2"
+  compliance-profiles: ["wcag-2.2-aa", "en-301-549"]
+---
+```
+
+Instruction markup guidance:
+
+- Keep one H1 per file.
+- Use explicit `## Decision Matrix` and `## Non-Negotiable Standards` headings for scanners.
+- Prefer checklist-style acceptance criteria sections for automation (`## Acceptance Criteria`).
+- Keep line-based examples in fenced code blocks with explicit language tags.
+
 ## Build & Test
 
 No build step required - agents are markdown files.

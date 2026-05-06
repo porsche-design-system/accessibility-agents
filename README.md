@@ -482,6 +482,7 @@ The following guides cover advanced configuration, cross-platform handoff, and d
 |-------|---------------|
 | [Cross-Platform Handoff](docs/advanced/cross-platform-handoff.md) | Seamless handoff between Claude Code and Copilot |
 | [Advanced Scanning Patterns](docs/advanced/advanced-scanning-patterns.md) | Background scanning, worktree isolation, large libraries |
+| [Metadata and Markup Conventions](docs/guides/metadata-markup-conventions.md) | Recommended metadata fields and markdown structure conventions for agents, skills, and instructions |
 | [Plugin Packaging](docs/advanced/plugin-packaging.md) | Packaging and distributing agents for different environments |
 | [Platform References](docs/advanced/platform-references.md) | External documentation sources with feature-to-source mapping |
 | [Experimental Codex Multi-Agent Roles](docs/guides/codex-experimental-multi-agent.md) | Optional TOML-based Codex roles for focused accessibility passes |

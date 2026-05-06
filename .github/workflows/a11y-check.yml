@@ -13,6 +13,16 @@ on:
       - "**/*.css"
       - "**/*.scss"
       - "**/*.md"
+  workflow_dispatch:
+    inputs:
+      enforcement_mode:
+        description: "Markdown lint gate mode (none|error|warning)"
+        required: false
+        default: "error"
+      output_format:
+        description: "Markdown lint output format (text|sarif|both)"
+        required: false
+        default: "both"
 
 jobs:
   a11y-lint:
@@ -92,6 +102,9 @@ jobs:
   markdown-lint:
     name: Markdown Accessibility Lint
     runs-on: ubuntu-latest
+    env:
+      A11Y_ENFORCE_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.enforcement_mode || vars.A11Y_MARKDOWN_FAIL_ON || 'error' }}
+      A11Y_OUTPUT_FORMAT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.output_format || vars.A11Y_MARKDOWN_FORMAT || 'both' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -101,7 +114,19 @@ jobs:
           node-version: "20"
 
       - name: Run markdown accessibility lint
-        run: node .github/scripts/markdown-a11y-lint.mjs .
+        run: |
+          node .github/scripts/markdown-a11y-lint.mjs . \
+            --fail-on "$A11Y_ENFORCE_MODE" \
+            --format "$A11Y_OUTPUT_FORMAT" \
+            --output artifacts/markdown-a11y.sarif
+
+      - name: Upload markdown a11y SARIF artifact
+        if: always() && (env.A11Y_OUTPUT_FORMAT == 'sarif' || env.A11Y_OUTPUT_FORMAT == 'both')
+        uses: actions/upload-artifact@v4
+        with:
+          name: markdown-a11y-sarif
+          path: artifacts/markdown-a11y.sarif
+          if-no-files-found: ignore
 
   # Optional: GitHub Accessibility Scanner for deployed pages
   # Uncomment and configure URLs to enable automated scanning on PR.

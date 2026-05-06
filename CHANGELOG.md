@@ -5,6 +5,30 @@ All notable changes to the Accessibility Agents project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.2.0] - 2026-05-06
+
+### Added
+
+- **Markdown scanner config support** via `.a11y-markdown-config.json` in `.github/scripts/markdown-a11y-lint.mjs` with per-rule enable/disable, severity overrides, ignore directory control, and configurable per-rule output limits.
+- **SARIF export support** for markdown accessibility findings (`--format sarif|both`, `--output`) to enable machine-readable CI artifacts.
+- **New template**: `templates/markdown-config-moderate.json` for fast adoption of markdown scanning defaults.
+- **Orchestrator dispatch contract validator**: `scripts/validate-orchestrator-dispatch.js` to enforce required `Specialist Dispatch` sections and verify specialist file references exist.
+- **New CI workflow**: `.github/workflows/validate-orchestrator-contracts.yml` to run dispatch contract validation on PRs and pushes.
+- **New documentation guide**: `docs/guides/metadata-markup-conventions.md` defining recommended metadata and markup conventions for agents, skills, and instruction files.
+
+### Changed
+
+- **`a11y-check.yml` markdown lint job** now supports gate modes (`none|error|warning`) and output modes (`text|sarif|both`) through workflow dispatch inputs and repo variables (`A11Y_MARKDOWN_FAIL_ON`, `A11Y_MARKDOWN_FORMAT`).
+- **`web-severity-scoring` skill** upgraded with v2 guidance: scoring profiles, calibration coefficients, confidence-drift guardrails, normalized trend metric, and recommended scoring metadata fields.
+- **`docs/getting-started.md`** updated with markdown scanner config examples, CI gate mode behavior, and SARIF usage patterns.
+- **`AGENTS.md`** expanded with recommended metadata frontmatter conventions for agents and skills, plus instruction markup conventions.
+- **`README.md`** documentation index now includes the metadata and markup conventions guide.
+
+### Fixed
+
+- **Markdown lint CI resilience** improved by making scanner behavior configurable without code changes.
+- **Orchestrator-specialist drift risk** reduced by adding CI-enforced dispatch contract validation.
+
 ## [5.1.0] - 2026-05-03
 
 ### Added

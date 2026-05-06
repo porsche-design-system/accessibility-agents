@@ -27,6 +27,18 @@ Weights:
 Floor: 0 (minimum score)
 ```
 
+### Scoring Profiles
+
+Use a profile to tune strictness by context while keeping comparable grade bands:
+
+| Profile | Intended Use | Multiplier |
+|---------|--------------|------------|
+| balanced (default) | Standard product delivery | 1.0 |
+| strict | Regulated/public-sector releases | 1.15 |
+| advisory | Early design and prototyping | 0.8 |
+
+Apply the profile multiplier to each final deduction after confidence handling.
+
 ### Formula
 
 ```pseudocode
@@ -42,6 +54,26 @@ The values in the lookup table above are **base deductions** (pre-multiplier).
 "Confirmed" findings (validated by all three sources: axe-core + agent review + Playwright) apply an additional 1.2× multiplier.
 
 **Example:** One Critical finding at confirmed confidence = 18 (base) × 1.2 = **21.6 points** deducted → page score 78.
+
+### Calibration Layer (v2)
+
+To reduce false-positive inflation and stabilize trends, apply a calibration coefficient by rule family:
+
+```text
+calibrated_deduction = deduction × calibration_coefficient(rule_family)
+```
+
+Recommended initial coefficients:
+
+| Rule Family | Coefficient | Rationale |
+|-------------|-------------|-----------|
+| Keyboard/focus | 1.1 | High functional impact at runtime |
+| Forms/labels/errors | 1.05 | High completion risk for core tasks |
+| Semantics/structure | 1.0 | Baseline scoring |
+| Link text/context | 0.9 | Higher context variance |
+| Content quality (alt/link clarity) | 0.85 | Needs human review more often |
+
+Update coefficients quarterly from confirmed outcomes. Avoid changing coefficients more than +/-0.1 per cycle.
 
 ## Score Grades
 
@@ -73,6 +105,20 @@ Issues found by all three sources (axe-core + agent review + Playwright behavior
 - Playwright behavioral scan confirms the issue at runtime (e.g., keyboard trap confirmed by actual Tab traversal, contrast failure confirmed by rendered CSS computation)
 
 When Playwright is not available, the maximum achievable confidence remains **High (100%)**. The confirmed tier is additive — it never downgrades findings.
+
+### Confidence Drift Guard
+
+Track predicted confidence versus post-triage outcome and compute drift:
+
+```text
+drift = abs(predicted_confidence_score - observed_confirmation_rate)
+```
+
+Operational guideline:
+
+- drift <= 0.10: stable
+- drift 0.11-0.20: tune coefficients and source mapping
+- drift > 0.20: freeze profile changes and run rule-level review
 
 ## Scorecard Format
 
@@ -130,6 +176,37 @@ When Playwright is not available, the maximum achievable confidence remains **Hi
 - **Score change:** `current_score - previous_score`
 - **Pages improved:** count of pages with higher scores than previous audit
 - **Trend:** improving (score up 5+), stable (within 5), declining (score down 5+)
+
+### Normalized Trend Metric (Cross-Audit)
+
+When audit scope changes between runs, use normalized change:
+
+```text
+normalized_score = raw_score - (scope_variance_penalty)
+scope_variance_penalty = min(10, abs(previous_pages - current_pages) * 0.8)
+```
+
+Use normalized score for trend charts and use raw score for release gates.
+
+## Output Metadata (Recommended)
+
+Include these fields in generated score artifacts for reproducibility:
+
+```yaml
+scoring:
+  model: web-severity-scoring-v2
+  profile: balanced
+  calibrationVersion: 2026-q2
+  confidenceSources:
+    - axe-core
+    - agent-review
+    - playwright
+  failThresholds:
+    critical: 1
+    score: 75
+```
+
+This metadata allows deterministic re-runs and audit-to-audit comparisons.
 
 ## Issue Severity Categories
 
