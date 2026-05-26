@@ -32,8 +32,6 @@ param(
 $ErrorActionPreference = "Stop"
 $AutoApprove = $Yes.IsPresent
 $OptionalPlatformFlags = $Copilot.IsPresent -or $Cli.IsPresent -or $Codex.IsPresent -or $Gemini.IsPresent
-$ScriptDirForHelpers = if ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { (Get-Location).Path }
-. (Join-Path $ScriptDirForHelpers 'scripts\Installer.Common.ps1')
 
 # Determine source: running from repo clone or downloaded?
 $Downloaded = $false
@@ -64,6 +62,9 @@ if (-not $ScriptDir -or -not (Test-Path (Join-Path $ScriptDir ".claude\agents"))
     $ScriptDir = $TmpDir
     Write-Host "  Downloaded."
 }
+
+#source the helper scripts
+. (Join-Path $ScriptDir 'scripts\Installer.Common.ps1')
 
 $AgentsSrc = Join-Path $ScriptDir ".claude\agents"
 $CopilotAgentsSrc = Join-Path $ScriptDir ".github\agents"
@@ -288,35 +289,35 @@ $OperationRoot = if ($Choice -eq '1') { (Get-Location).Path } else { $env:USERPR
 $BackupMetadataPath = Initialize-A11yOperationState -Operation 'install' -Root $OperationRoot -SummaryPath $SummaryPath -DryRun $DryRun -CheckMode $Check -CandidatePaths @($TargetDir, (Join-Path $TargetDir '.a11y-agent-manifest'), (Join-Path $TargetDir '.a11y-agent-team-version'))
 
 $InstallSummary = [ordered]@{
-    schemaVersion = '1.0'
-    timestampUtc = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
-    operation = 'install'
-    dryRun = [bool]$DryRun
-    check = [bool]$Check
-    scope = if ($Choice -eq '1') { 'project' } else { 'global' }
-    targetDir = $TargetDir
-    requestedOptions = [ordered]@{
-        copilot = [bool]$Copilot
-        copilotCli = [bool]$Cli
-        codex = [bool]$Codex
-        gemini = [bool]$Gemini
-        autoApprove = [bool]$Yes
-        noAutoUpdate = [bool]$NoAutoUpdate
+    schemaVersion           = '1.0'
+    timestampUtc            = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+    operation               = 'install'
+    dryRun                  = [bool]$DryRun
+    check                   = [bool]$Check
+    scope                   = if ($Choice -eq '1') { 'project' } else { 'global' }
+    targetDir               = $TargetDir
+    requestedOptions        = [ordered]@{
+        copilot           = [bool]$Copilot
+        copilotCli        = [bool]$Cli
+        codex             = [bool]$Codex
+        gemini            = [bool]$Gemini
+        autoApprove       = [bool]$Yes
+        noAutoUpdate      = [bool]$NoAutoUpdate
         vscodeProfileMode = $VsCodeProfileMode
-        mcpProfileMode = $McpProfileMode
+        mcpProfileMode    = $McpProfileMode
     }
-    detectedVsCodeProfiles = @($DetectedVsCodeProfiles | ForEach-Object {
-        [ordered]@{
-            key = $_.Key
-            name = $_.Name
-            path = $_.Path
-            exists = [bool]$_.Exists
-        }
-    })
+    detectedVsCodeProfiles  = @($DetectedVsCodeProfiles | ForEach-Object {
+            [ordered]@{
+                key    = $_.Key
+                name   = $_.Name
+                path   = $_.Path
+                exists = [bool]$_.Exists
+            }
+        })
     selectedCopilotProfiles = @($SelectedCopilotProfiles | ForEach-Object { $_.Path })
-    selectedMcpProfiles = @($SelectedMcpProfiles | ForEach-Object { $_.Path })
-    backupMetadataPath = $BackupMetadataPath
-    notes = @()
+    selectedMcpProfiles     = @($SelectedMcpProfiles | ForEach-Object { $_.Path })
+    backupMetadataPath      = $BackupMetadataPath
+    notes                   = @()
 }
 
 if ($Check) {
@@ -390,10 +391,10 @@ function Read-YesNo {
 function Get-McpCapabilityPlan {
     if ($AutoApprove -or -not (Test-InteractivePrompting)) {
         return [PSCustomObject]@{
-            Focus = 'Baseline scanning'
-            BrowserTools = $false
-            PdfForms = $false
-            DeepPdf = $false
+            Focus           = 'Baseline scanning'
+            BrowserTools    = $false
+            PdfForms        = $false
+            DeepPdf         = $false
             ConfigureVsCode = $true
         }
     }
@@ -410,11 +411,11 @@ function Get-McpCapabilityPlan {
 
     $Choice = Read-Host "  Choose [1/2/3/4/5]"
     $Plan = [ordered]@{
-        Focus            = 'Baseline scanning'
-        BrowserTools     = $false
-        PdfForms         = $false
-        DeepPdf          = $false
-        ConfigureVsCode  = $true
+        Focus           = 'Baseline scanning'
+        BrowserTools    = $false
+        PdfForms        = $false
+        DeepPdf         = $false
+        ConfigureVsCode = $true
     }
 
     switch ($Choice) {
@@ -735,27 +736,27 @@ function Show-McpCapabilityReadiness {
 function Migrate-Prompts {
     param([string]$SrcDir)
     if (-not (Test-Path $SrcDir)) { return }
-    
+
     $migrations = @{
-        "a11y-update.prompt.md" = "insiders-a11y-tracker.prompt.md"
-        "audit-desktop-a11y.prompt.md" = "desktop-a11y-specialist.prompt.md"
-        "audit-markdown.prompt.md" = "markdown-a11y-assistant.prompt.md"
-        "audit-web-page.prompt.md" = "web-accessibility-wizard.prompt.md"
-        "export-document-csv.prompt.md" = "document-csv-reporter.prompt.md"
-        "export-markdown-csv.prompt.md" = "markdown-csv-reporter.prompt.md"
-        "export-web-csv.prompt.md" = "web-csv-reporter.prompt.md"
-        "package-python-app.prompt.md" = "python-specialist.prompt.md"
-        "review-text-quality.prompt.md" = "text-quality-reviewer.prompt.md"
-        "scaffold-nvda-addon.prompt.md" = "nvda-addon-specialist.prompt.md"
+        "a11y-update.prompt.md"           = "insiders-a11y-tracker.prompt.md"
+        "audit-desktop-a11y.prompt.md"    = "desktop-a11y-specialist.prompt.md"
+        "audit-markdown.prompt.md"        = "markdown-a11y-assistant.prompt.md"
+        "audit-web-page.prompt.md"        = "web-accessibility-wizard.prompt.md"
+        "export-document-csv.prompt.md"   = "document-csv-reporter.prompt.md"
+        "export-markdown-csv.prompt.md"   = "markdown-csv-reporter.prompt.md"
+        "export-web-csv.prompt.md"        = "web-csv-reporter.prompt.md"
+        "package-python-app.prompt.md"    = "python-specialist.prompt.md"
+        "review-text-quality.prompt.md"   = "text-quality-reviewer.prompt.md"
+        "scaffold-nvda-addon.prompt.md"   = "nvda-addon-specialist.prompt.md"
         "scaffold-wxpython-app.prompt.md" = "wxpython-specialist.prompt.md"
-        "test-desktop-a11y.prompt.md" = "desktop-a11y-testing-coach.prompt.md"
+        "test-desktop-a11y.prompt.md"     = "desktop-a11y-testing-coach.prompt.md"
     }
-    
+
     foreach ($oldName in $migrations.Keys) {
         $newName = $migrations[$oldName]
         $oldFile = Join-Path $SrcDir $oldName
         $newFile = Join-Path $SrcDir $newName
-        
+
         if ((Test-Path $oldFile) -and -not (Test-Path $newFile)) {
             Rename-Item -Path $oldFile -NewName $newName -ErrorAction SilentlyContinue
         }
@@ -967,7 +968,7 @@ if ($InstallCopilot) {
                 if ($SubDir -eq "prompts") {
                     Migrate-Prompts -SrcDir $SrcSubDir
                 }
-                
+
                 New-Item -ItemType Directory -Force -Path $DstSubDir | Out-Null
                 $Added = 0; $Skipped = 0
                 foreach ($File in Get-ChildItem -Recurse -File $SrcSubDir) {
@@ -1031,7 +1032,7 @@ if ($InstallCopilot) {
                 if ($Pair.SubDir -eq "prompts") {
                     Migrate-Prompts -SrcDir $Pair.Src
                 }
-                
+
                 New-Item -ItemType Directory -Force -Path $Pair.Dst | Out-Null
                 Copy-Item -Path "$($Pair.Src)\*" -Destination $Pair.Dst -Recurse -Force
             }
@@ -1051,13 +1052,13 @@ if ($InstallCopilot) {
             New-Item -ItemType Directory -Force -Path $PromptsDir | Out-Null
             Write-Host "  [found] $Label"
 
-            $AgentFiles = Get-ChildItem -Path $CopilotCentral            -Filter "*.agent.md"       -ErrorAction SilentlyContinue
-            $PromptFiles = Get-ChildItem -Path $CopilotCentralPrompts     -Filter "*.prompt.md"      -ErrorAction SilentlyContinue
+            $AgentFiles = Get-ChildItem -Path $CopilotCentral -Filter "*.agent.md" -ErrorAction SilentlyContinue
+            $PromptFiles = Get-ChildItem -Path $CopilotCentralPrompts -Filter "*.prompt.md" -ErrorAction SilentlyContinue
             $InstructionFiles = Get-ChildItem -Path $CopilotCentralInstructions -Filter "*.instructions.md" -ErrorAction SilentlyContinue
 
             foreach ($File in @($AgentFiles) + @($PromptFiles) + @($InstructionFiles)) {
                 if ($File) {
-                    Copy-Item -Path $File.FullName -Destination (Join-Path $PromptsDir  $File.Name) -Force
+                    Copy-Item -Path $File.FullName -Destination (Join-Path $PromptsDir $File.Name) -Force
                 }
             }
 
@@ -1751,22 +1752,22 @@ if (($McpProfileMode -ne 'auto') -and ($SelectedMcpProfiles.Count -eq 0) -and $M
 }
 
 $InstallSummary.installed = [ordered]@{
-    claude = $true
-    plugin = $false
-    copilot = [bool]$CopilotInstalled
+    claude     = $true
+    plugin     = $false
+    copilot    = [bool]$CopilotInstalled
     copilotCli = [bool]$CopilotCliInstalled
-    codex = [bool]$CodexInstalled
-    gemini = [bool]$GeminiInstalled
-    mcp = [bool]$McpInstalled
+    codex      = [bool]$CodexInstalled
+    gemini     = [bool]$GeminiInstalled
+    mcp        = [bool]$McpInstalled
     autoUpdate = [bool]$AutoUpdateEnabled
 }
 $InstallSummary.destinations = [ordered]@{
-    claude = @($TargetDir)
-    copilot = @($CopilotDestinations)
+    claude     = @($TargetDir)
+    copilot    = @($CopilotDestinations)
     copilotCli = @($CliAgentsDst, $CliSkillsDst) | Where-Object { $_ }
-    codex = @($CodexSkillsDst, $CodexConfigDst, $CodexRolesDst) | Where-Object { $_ }
-    gemini = @($GeminiDst) | Where-Object { $_ }
-    mcp = @($McpDest) | Where-Object { $_ }
+    codex      = @($CodexSkillsDst, $CodexConfigDst, $CodexRolesDst) | Where-Object { $_ }
+    gemini     = @($GeminiDst) | Where-Object { $_ }
+    mcp        = @($McpDest) | Where-Object { $_ }
 }
 $InstallSummary.manifestPath = $ManifestPath
 Write-InstallSummaryFile -Path $SummaryPath -Data $InstallSummary
