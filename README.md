@@ -49,12 +49,12 @@ All agents run on:
 - **Claude Code** - Agents you invoke directly for accessibility evaluation
 - **GitHub Copilot** (VS Code and CLI) - Agents + workspace instructions that ensure accessibility guidance in every conversation
 - **Gemini CLI** - Skills-based extension with always-on WCAG AA context via GEMINI.md
-- **Codex CLI** - Direct Accessibility Agents skills pack plus optional experimental TOML-based roles for focused accessibility passes
+- **Codex CLI** - Native Codex plugin with small router skills, custom subagents, lazy specialist references, and extension-aware dispatch
 - **MCP Server** - HTTP-based server providing 24 accessibility scanning tools to any MCP-compatible client (Claude Desktop, VS Code, CI/CD pipelines)
 
 ## System Requirements
 
-> ⚠️ **CRITICAL:** To remain current with Accessibility Agents and ensure proper functionality, you **must** keep all tools updated to their latest versions. New platform capabilities, API changes, accessibility features, and bug fixes directly impact agent behavior.
+> **CRITICAL:** To remain current with Accessibility Agents and ensure proper functionality, you **must** keep all tools updated to their latest versions. New platform capabilities, API changes, accessibility features, and bug fixes directly impact agent behavior.
 
 ### Required Tools (Latest Versions)
 
@@ -277,6 +277,8 @@ bash install.sh --project --copilot --yes --no-auto-update --dry-run
 
 See the full [Getting Started Guide](docs/getting-started.md) for all installation options, manual setup, global vs project install, auto-updates, and platform-specific details.
 
+Accessibility Agents v6 also introduces extension packs for company, team, framework, regional, and design-system standards. Installed extensions can contribute first-class agents and rules to the same router workflows as the bundled core agents.
+
 ### One-liner uninstall
 
 **Windows (PowerShell):**
@@ -353,12 +355,12 @@ Findings are appended to the install summary JSON and a separate `.a11y-agent-te
 
 **What the extension will include:**
 
-- ✅ 59 fully-integrated agents in GitHub Copilot (VS Code and CLI)
-- ✅ 18 reusable accessibility skills (WCAG rules, severity scoring, scanning patterns)
-- ✅ 106 custom prompts for web audits, document audits, GitHub workflows, and developer tooling
-- ✅ 6 workspace instructions (automatic WCAG AA enforcement on every chat)
-- ✅ 100% source citation coverage (all agents cite authoritative standards)
-- ✅ Auto-update mechanism (new agents and features arrive automatically)
+- Complete: 59 fully-integrated agents in GitHub Copilot (VS Code and CLI)
+- Complete: 18 reusable accessibility skills (WCAG rules, severity scoring, scanning patterns)
+- Complete: 106 custom prompts for web audits, document audits, GitHub workflows, and developer tooling
+- Complete: 6 workspace instructions (automatic WCAG AA enforcement on every chat)
+- Complete: 100% source citation coverage (all agents cite authoritative standards)
+- Complete: Auto-update mechanism (new agents and features arrive automatically)
 
 For other platforms (Claude Code, Gemini, Claude Desktop, Codex), see [Getting Started](docs/getting-started.md).
 
@@ -447,6 +449,8 @@ The following guides cover web and document accessibility features.
 | [Configuration](docs/configuration.md) | Character budget, troubleshooting |
 | [Architecture](docs/architecture.md) | Project structure, why agents over skills/MCP, design philosophy |
 | [Subagent Architecture](docs/subagent-architecture.md) | Coordinator-worker patterns, delegation rules, allowlist validation, nested subagent policy |
+| [Codex Subagents](docs/guides/codex-experimental-multi-agent.md) | Native Codex plugin, router skills, subagents, lazy references, and extension-aware dispatch |
+| [Accessibility Agents Extensions](docs/guides/accessibility-agent-extensions.md) | Built-in and custom extension packs, authoring format, marketplace submission, and review rules |
 | [Troubleshooting](docs/troubleshooting.md) | MCP server issues, agent configuration, performance, platform-specific debugging |
 
 ### GitHub Workflow Docs
@@ -471,7 +475,6 @@ The following guides cover advanced configuration, cross-platform handoff, and d
 | [Playwright High-Impact Checks](docs/guides/playwright-high-impact-checks.md) | High-impact runtime accessibility checks for keyboard traps, serious violations, and viewport risk |
 | [CI Integrity Guards](docs/guides/ci-integrity-guards.md) | Guard rails for workflow invariants, config/schema drift, and documentation version pin checks |
 | [Release Communications Checklist](docs/guides/release-communications-checklist.md) | Repeatable release messaging checklist for changelog, notes, publish, and announcements |
-| [Experimental Codex Multi-Agent Roles](docs/guides/codex-experimental-multi-agent.md) | Optional TOML-based Codex roles for focused accessibility passes |
 | [Research Sources](docs/RESEARCH-SOURCES.md) | Authoritative sources (W3C APG, WebAIM, WCAG 2.2, Deque) that informed every agent rule |
 
 ## What This Covers

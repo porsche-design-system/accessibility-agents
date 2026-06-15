@@ -7,12 +7,12 @@
 #   bash install.sh --global           Install globally to ~/.claude/
 #   bash install.sh --global --copilot Also install Copilot agents to VS Code
 #   bash install.sh --global --cli     Also install Copilot CLI agents to ~/.copilot/
-#   bash install.sh --global --codex   Also install Codex skills to ~/.codex/skills/
+#   bash install.sh --global --codex   Also install Codex plugin, router skills, and subagents
 #   bash install.sh --global --gemini  Also install Gemini CLI extension
 #   bash install.sh --project          Install to .claude/ in the current directory
 #   bash install.sh --project --copilot Also install Copilot agents to project
 #   bash install.sh --project --cli    Also install Copilot CLI agents to project
-#   bash install.sh --project --codex  Also install Codex skills to .codex/skills/
+#   bash install.sh --project --codex  Also install Codex plugin, router skills, and subagents
 #   bash install.sh --project --gemini Also install Gemini CLI extension
 #   bash install.sh --global --vscode-stable     Target VS Code stable only for Copilot assets
 #   bash install.sh --global --vscode-insiders   Target VS Code Insiders only for Copilot assets
@@ -1865,6 +1865,7 @@ fi
 CODEX_CONFIG_SRC="$SCRIPT_DIR/.codex/config.toml"
 CODEX_ROLES_SRC="$SCRIPT_DIR/.codex/roles"
 CODEX_SKILLS_SRC="$SCRIPT_DIR/codex-skills"
+CODEX_PLUGIN_SRC="$SCRIPT_DIR/codex-plugin"
 CODEX_INSTALLED=false
 
 install_codex=false
@@ -1883,23 +1884,105 @@ elif [ "$OPTIONAL_PLATFORM_FLAGS" = false ] && [ "$AUTO_APPROVE" = false ] && { 
   fi
 fi
 
-if [ "$install_codex" = true ] && { [ -d "$CODEX_SKILLS_SRC" ] || [ -f "$CODEX_CONFIG_SRC" ]; }; then
+if [ "$install_codex" = true ] && { [ -d "$CODEX_PLUGIN_SRC" ] || [ -d "$CODEX_SKILLS_SRC" ] || [ -f "$CODEX_CONFIG_SRC" ]; }; then
   echo ""
   echo "  Installing Codex support..."
 
   if [ "$choice" = "1" ]; then
     CODEX_TARGET_DIR="$(pwd)/.codex"
+    CODEX_AGENTS_PROFILE_DIR="$(pwd)/.agents"
+    CODEX_PLUGIN_DST="$(pwd)/plugins/a11y-agents-codex"
+    CODEX_EXTENSION_DST="$(pwd)/.a11y-agents/extensions"
     mkdir -p "$CODEX_TARGET_DIR"
   else
     CODEX_TARGET_DIR="$HOME/.codex"
+    CODEX_AGENTS_PROFILE_DIR="$HOME/.agents"
+    CODEX_PLUGIN_DST="$HOME/plugins/a11y-agents-codex"
+    CODEX_EXTENSION_DST="$HOME/.a11y-agents/extensions"
     mkdir -p "$CODEX_TARGET_DIR"
   fi
-  if [ -f "$CODEX_CONFIG_SRC" ]; then
+  if [ -d "$CODEX_PLUGIN_SRC" ]; then
+    mkdir -p "$CODEX_PLUGIN_DST"
+    cp -R "$CODEX_PLUGIN_SRC"/. "$CODEX_PLUGIN_DST/"
+    add_manifest_entry "codex-plugin/path:$CODEX_PLUGIN_DST/.codex-plugin/plugin.json"
+
+    CODEX_PLUGIN_SKILLS_DST="$CODEX_AGENTS_PROFILE_DIR/skills"
+    mkdir -p "$CODEX_PLUGIN_SKILLS_DST"
+    if [ -d "$CODEX_PLUGIN_SRC/skills" ]; then
+      while IFS= read -r src_skill_dir; do
+        rel="${src_skill_dir#$CODEX_PLUGIN_SRC/skills/}"
+        dst_skill_dir="$CODEX_PLUGIN_SKILLS_DST/$rel"
+        mkdir -p "$dst_skill_dir"
+        cp "$src_skill_dir/SKILL.md" "$dst_skill_dir/SKILL.md"
+        add_manifest_entry "codex-router-skill/path:$dst_skill_dir/SKILL.md"
+      done < <(find "$CODEX_PLUGIN_SRC/skills" -mindepth 1 -maxdepth 1 -type d | sort)
+      echo "    + Codex router skills installed to $CODEX_PLUGIN_SKILLS_DST"
+    fi
+
+    if [ -d "$CODEX_PLUGIN_SRC/agents" ]; then
+      CODEX_AGENTS_DST="$CODEX_TARGET_DIR/agents"
+      mkdir -p "$CODEX_AGENTS_DST"
+      while IFS= read -r src_file; do
+        rel="${src_file#$CODEX_PLUGIN_SRC/agents/}"
+        dst_file="$CODEX_AGENTS_DST/$rel"
+        cp "$src_file" "$dst_file"
+        add_manifest_entry "codex-agent/path:$dst_file"
+      done < <(find "$CODEX_PLUGIN_SRC/agents" -type f -name "*.toml" | sort)
+      echo "    + Codex subagents installed to $CODEX_AGENTS_DST"
+    fi
+
+    if [ -d "$CODEX_PLUGIN_SRC/extensions" ]; then
+      mkdir -p "$CODEX_EXTENSION_DST"
+      while IFS= read -r src_extension; do
+        rel="${src_extension#$CODEX_PLUGIN_SRC/extensions/}"
+        dst_extension="$CODEX_EXTENSION_DST/$rel"
+        mkdir -p "$(dirname "$dst_extension")"
+        cp "$src_extension" "$dst_extension"
+        add_manifest_entry "a11y-extension/path:$dst_extension"
+      done < <(find "$CODEX_PLUGIN_SRC/extensions" -mindepth 2 -maxdepth 2 -name "extension.json" | sort)
+    fi
+
+    CODEX_MARKETPLACE_DIR="$CODEX_AGENTS_PROFILE_DIR/plugins"
+    CODEX_MARKETPLACE_JSON="$CODEX_MARKETPLACE_DIR/marketplace.json"
+    mkdir -p "$CODEX_MARKETPLACE_DIR"
+    if [ ! -f "$CODEX_MARKETPLACE_JSON" ]; then
+      cat > "$CODEX_MARKETPLACE_JSON" <<EOF
+{
+  "name": "accessibility-agents",
+  "interface": {
+    "displayName": "Accessibility Agents"
+  },
+  "plugins": [
+    {
+      "name": "a11y-agents-codex",
+      "source": {
+        "source": "local",
+        "path": "$CODEX_PLUGIN_DST"
+      },
+      "policy": {
+        "installation": "INSTALLED_BY_DEFAULT",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
+EOF
+      add_manifest_entry "codex-marketplace/path:$CODEX_MARKETPLACE_JSON"
+      echo "    + Codex plugin marketplace registered at $CODEX_MARKETPLACE_JSON"
+    elif grep -q '"a11y-agents-codex"' "$CODEX_MARKETPLACE_JSON"; then
+      echo "    + Codex plugin marketplace already includes a11y-agents-codex"
+    else
+      echo "    ! Existing Codex marketplace left unchanged at $CODEX_MARKETPLACE_JSON"
+      echo "      Router skills and subagents were installed directly."
+    fi
+  fi
+  if [ ! -d "$CODEX_PLUGIN_SRC" ] && [ -f "$CODEX_CONFIG_SRC" ]; then
     CODEX_CONFIG_DST="$CODEX_TARGET_DIR/config.toml"
     merge_config_file "$CODEX_CONFIG_SRC" "$CODEX_CONFIG_DST" "config.toml (Codex experimental roles)"
     add_manifest_entry "codex-config/path:$CODEX_CONFIG_DST"
   fi
-  if [ -d "$CODEX_ROLES_SRC" ]; then
+  if [ ! -d "$CODEX_PLUGIN_SRC" ] && [ -d "$CODEX_ROLES_SRC" ]; then
     CODEX_ROLES_DST="$CODEX_TARGET_DIR/roles"
     mkdir -p "$CODEX_ROLES_DST"
     while IFS= read -r src_file; do
@@ -1910,7 +1993,7 @@ if [ "$install_codex" = true ] && { [ -d "$CODEX_SKILLS_SRC" ] || [ -f "$CODEX_C
       add_manifest_entry "codex-role/path:$dst_file"
     done < <(find "$CODEX_ROLES_SRC" -type f -name "*.toml" | sort)
   fi
-  if [ -d "$CODEX_SKILLS_SRC" ]; then
+  if [ ! -d "$CODEX_PLUGIN_SRC" ] && [ -d "$CODEX_SKILLS_SRC" ]; then
     CODEX_SKILLS_DST="$CODEX_TARGET_DIR/skills"
     mkdir -p "$CODEX_SKILLS_DST"
     while IFS= read -r src_skill_dir; do
@@ -1930,8 +2013,8 @@ if [ "$install_codex" = true ] && { [ -d "$CODEX_SKILLS_SRC" ] || [ -f "$CODEX_C
   fi
 
   echo ""
-  echo "  Codex will now load the Accessibility Agents skills."
-  echo "  Experimental named roles are available through .codex/config.toml."
+  echo "  Codex will now load the Accessibility Agents router skills."
+  echo "  Codex subagents are available after starting a new Codex session."
   echo "  Codex hook support exists upstream, but it is currently experimental and"
   echo "  only intercepts Bash/local-shell flows, not all file-edit tools."
   echo "  Run: codex \"Review this page for accessibility issues\"."
@@ -2266,6 +2349,10 @@ fi
 if [ "$CODEX_INSTALLED" = true ]; then
   echo ""
   echo "  Codex support installed to:"
+  [ -n "$CODEX_PLUGIN_DST" ] && echo "    -> $CODEX_PLUGIN_DST"
+  [ -n "$CODEX_PLUGIN_SKILLS_DST" ] && echo "    -> $CODEX_PLUGIN_SKILLS_DST"
+  [ -n "$CODEX_AGENTS_DST" ] && echo "    -> $CODEX_AGENTS_DST"
+  [ -n "$CODEX_EXTENSION_DST" ] && echo "    -> $CODEX_EXTENSION_DST"
   [ -n "$CODEX_SKILLS_DST" ] && echo "    -> $CODEX_SKILLS_DST"
   [ -n "$CODEX_CONFIG_DST" ] && echo "    -> $CODEX_CONFIG_DST"
   [ -n "$CODEX_ROLES_DST" ] && echo "    -> $CODEX_ROLES_DST/"
@@ -2569,7 +2656,7 @@ echo "  For manual uninstall instructions, see: UNINSTALL.md"
 echo ""
 if [ "$CODEX_INSTALLED" = true ]; then
   echo "  Start Codex in this project and try: \"Review this component for accessibility issues\""
-  echo "  The Accessibility Agents skills should load from .codex/skills or ~/.codex/skills."
+  echo "  The Accessibility Agents router skills and subagents should load after a new Codex session."
 else
   echo "  Start Claude Code and try: \"Build a login form\""
   echo "  The accessibility-lead should activate automatically."

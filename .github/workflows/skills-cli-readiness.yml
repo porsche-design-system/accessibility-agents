@@ -31,6 +31,9 @@ jobs:
       - name: Check skill description quality
         run: node scripts/check-skill-description-quality.js
 
+      - name: Validate Codex plugin surface
+        run: node scripts/validate-codex-plugin.js
+
       - name: Generate manifest, SBOM, and signature payload
         env:
           GH_SKILLS_SIGNING_KEY: ${{ secrets.GH_SKILLS_SIGNING_KEY }}

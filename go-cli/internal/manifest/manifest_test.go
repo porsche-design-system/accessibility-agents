@@ -19,6 +19,9 @@ func TestGenerateIncludesExpectedEntries(t *testing.T) {
 	writeTestFile(t, filepath.Join(repoRoot, ".codex", "AGENTS.md"), "agents")
 	writeTestFile(t, filepath.Join(repoRoot, ".codex", "config.toml"), "config")
 	writeTestFile(t, filepath.Join(repoRoot, ".codex", "roles", "lead.toml"), "role")
+	writeTestFile(t, filepath.Join(repoRoot, ".codex", "agents", "aria-specialist.toml"), "agent")
+	writeTestFile(t, filepath.Join(repoRoot, "codex-plugin", ".codex-plugin", "plugin.json"), "{}")
+	writeTestFile(t, filepath.Join(repoRoot, ".a11y-agents", "extensions", "core", "extension.json"), "{}")
 	writeTestFile(t, filepath.Join(repoRoot, ".gemini", "extensions", "a11y-agents", "gemini-extension.json"), "{}")
 
 	entries, err := Generate(repoRoot)
@@ -34,6 +37,9 @@ func TestGenerateIncludesExpectedEntries(t *testing.T) {
 		"copilot-prompts/audit.prompt.md",
 		"copilot-skills/sample/SKILL.md",
 		"codex/AGENTS.md",
+		"a11y-extensions/core/extension.json",
+		"codex-plugin/.codex-plugin/plugin.json",
+		"codex/agents/aria-specialist.toml",
 		"codex/config.toml",
 		"codex/roles/lead.toml",
 		"gemini/gemini-extension.json",

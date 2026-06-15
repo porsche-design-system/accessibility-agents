@@ -42,6 +42,9 @@ func Generate(repoRoot string) ([]string, error) {
 		lines = append(lines, "codex/config.toml")
 	}
 	_ = filepath.Walk(filepath.Join(repoRoot, ".codex", "roles"), walker(filepath.Join(repoRoot, ".codex", "roles"), "codex/roles/", "*.toml", &lines))
+	_ = filepath.Walk(filepath.Join(repoRoot, ".codex", "agents"), walker(filepath.Join(repoRoot, ".codex", "agents"), "codex/agents/", "*.toml", &lines))
+	_ = filepath.Walk(filepath.Join(repoRoot, "codex-plugin"), walker(filepath.Join(repoRoot, "codex-plugin"), "codex-plugin/", "*", &lines))
+	_ = filepath.Walk(filepath.Join(repoRoot, ".a11y-agents", "extensions"), walker(filepath.Join(repoRoot, ".a11y-agents", "extensions"), "a11y-extensions/", "extension.json", &lines))
 	_ = filepath.Walk(filepath.Join(repoRoot, ".gemini", "extensions", "a11y-agents"), walker(filepath.Join(repoRoot, ".gemini", "extensions", "a11y-agents"), "gemini/", "*", &lines))
 
 	lines = unique(lines)

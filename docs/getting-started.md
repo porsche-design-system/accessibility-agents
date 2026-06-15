@@ -182,7 +182,7 @@ For tasks that do not involve UI code (backend logic, scripts, database work), t
 
 ### Prerequisites
 
-> ⚠️ **IMPORTANT:** Always use the **latest versions** of all tools. Accessibility Agents rely on current platform APIs, new capabilities, and bug fixes. Outdated tools may cause unexpected behavior or missing functionality.
+> **IMPORTANT:** Always use the **latest versions** of all tools. Accessibility Agents rely on current platform APIs, new capabilities, and bug fixes. Outdated tools may cause unexpected behavior or missing functionality.
 
 **Required:**
 
@@ -445,7 +445,7 @@ The workspace instructions in `.github/copilot-instructions.md` are automaticall
 
 ### Prerequisites
 
-> ⚠️ **IMPORTANT:** Always use the **latest versions** of VS Code and GitHub Copilot extensions. New features (browser tools, enhanced context, improved tool use) and bug fixes directly impact agent capabilities.
+> **IMPORTANT:** Always use the **latest versions** of VS Code and GitHub Copilot extensions. New features (browser tools, enhanced context, improved tool use) and bug fixes directly impact agent capabilities.
 
 **Required:**
 
@@ -892,7 +892,7 @@ The A11y Agent Team extension adds:
 
 ### Prerequisites
 
-> ⚠️ **IMPORTANT:** Always use the **latest version** of Claude Desktop. Anthropic regularly adds new MCP capabilities, tool improvements, and features that enhance extension functionality.
+> **IMPORTANT:** Always use the **latest version** of Claude Desktop. Anthropic regularly adds new MCP capabilities, tool improvements, and features that enhance extension functionality.
 
 **Required:**
 
@@ -950,37 +950,24 @@ This is for **OpenAI Codex CLI** (the terminal coding agent).
 
 ### How It Works
 
-Accessibility Agents ships for Codex as a direct skills pack under `codex-skills/`. The installer copies those 80 skills into `.codex/skills/` for project installs or `~/.codex/skills/` for global installs, which is currently more reliable than depending on the Codex plugin marketplace flow for community distributions.
+Accessibility Agents ships for Codex as a native plugin under `codex-plugin/`.
 
-This repo also includes an experimental TOML-based role layer for newer Codex builds that support multi-agent workflows. Those roles are optional and separate from the skills pack.
+The universal installer installs:
 
-### Why Not the Codex Plugin Marketplace?
+- the Codex plugin payload
+- five small router skills under `.agents/skills/` or `~/.agents/skills/`
+- Codex custom subagents under `.codex/agents/` or `~/.codex/agents/`
+- built-in extension registries under `.a11y-agents/extensions/` or `~/.a11y-agents/extensions/`
 
-We originally implemented Accessibility Agents for Codex as a repo-local plugin package plus marketplace registration and tested it against current Codex plugin docs and app behavior.
+The full specialist library remains lazy-loaded inside the plugin. This keeps Codex from loading all 80 specialists into the initial skills list and avoids the skills context warning while preserving the same practical coverage.
 
-What we verified during that research:
+Built-in extensions include core orchestration, web accessibility, documents, markdown, GitHub workflows, and developer tools. They install automatically and use the same manifest model that company or community extensions use.
 
-- Codex does have a curated plugins directory in the app.
-- Local marketplace/plugin installation can work on a developer machine and Codex may cache the installed plugin under `~/.codex/plugins/cache/...`.
-- Codex plugin packaging is documented by OpenAI, but we could not find a public self-serve submission or broad community distribution workflow for third-party plugins.
-
-What did not hold up well enough for primary distribution:
-
-- Third-party plugin discovery was less predictable than direct skills installs across fresh Codex sessions.
-- Users often still had to install or confirm the plugin through the Codex app UI.
-- The experience was not close enough to the one-step familiarity people get from Claude-style agent installs or direct skill packs.
-
-Because of that, Codex support in this repo now uses the simpler and more dependable path: install the skills directly into `.codex/skills/` or `~/.codex/skills/`.
-
-Research references:
-
-- Codex curated plugins directory announcement: `https://help.openai.com/en/articles/11391654-chatgpt-business-release-notes`
-- Codex usage and workspace app controls: `https://help.openai.com/en/articles/11369540`
-- Codex plugin format sample: `https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/plugin-creator/references/plugin-json-spec.md`
+Codex may need a new session after install so it can discover new plugin, skill, and subagent files.
 
 ### Prerequisites
 
-> ⚠️ **IMPORTANT:** Always use the **latest version** of Codex CLI. New OpenAI model capabilities, API changes, and bug fixes may affect agent behavior.
+> **IMPORTANT:** Always use the **latest version** of Codex CLI. New OpenAI model capabilities, API changes, and bug fixes may affect agent behavior.
 
 **Required:**
 
@@ -1012,7 +999,7 @@ gh skill install Community-Access/accessibility-agents
 gh skill setup Community-Access/accessibility-agents
 ```
 
-The interactive installer also prompts for Codex support if you do not pass the flag. Codex installs include the 80-skill Accessibility Agents pack under `.codex/skills/` or `~/.codex/skills/` and, when available, the experimental `.codex/config.toml` plus `.codex/roles/*.toml` files.
+The interactive installer also prompts for Codex support if you do not pass the flag. Codex installs include the plugin, router skills, subagents, and extension registry in one pass.
 
 #### One-Liner
 
@@ -1024,19 +1011,21 @@ gh skill install Community-Access/accessibility-agents && gh skill setup Communi
 
 ```bash
 # For project install
-mkdir -p .codex/skills .codex/roles
-cp -R path/to/accessibility-agents/codex-skills/. .codex/skills/
-cp path/to/accessibility-agents/.codex/config.toml .codex/config.toml
-cp path/to/accessibility-agents/.codex/roles/*.toml .codex/roles/
+mkdir -p plugins .agents/skills .codex/agents .a11y-agents/extensions
+cp -R path/to/accessibility-agents/codex-plugin plugins/a11y-agents-codex
+cp -R path/to/accessibility-agents/codex-plugin/skills/. .agents/skills/
+cp path/to/accessibility-agents/codex-plugin/agents/*.toml .codex/agents/
+cp -R path/to/accessibility-agents/codex-plugin/extensions/* .a11y-agents/extensions/
 
 # For global install
-mkdir -p ~/.codex/skills ~/.codex/roles
-cp -R path/to/accessibility-agents/codex-skills/. ~/.codex/skills/
-cp path/to/accessibility-agents/.codex/config.toml ~/.codex/config.toml
-cp path/to/accessibility-agents/.codex/roles/*.toml ~/.codex/roles/
+mkdir -p ~/plugins ~/.agents/skills ~/.codex/agents ~/.a11y-agents/extensions
+cp -R path/to/accessibility-agents/codex-plugin ~/plugins/a11y-agents-codex
+cp -R path/to/accessibility-agents/codex-plugin/skills/. ~/.agents/skills/
+cp path/to/accessibility-agents/codex-plugin/agents/*.toml ~/.codex/agents/
+cp -R path/to/accessibility-agents/codex-plugin/extensions/* ~/.a11y-agents/extensions/
 ```
 
-For project installs, commit `.codex/skills/` and optionally `.codex/config.toml` plus `.codex/roles/` so the Accessibility Agents skill pack and any experimental roles travel with the project together.
+For project installs, commit `plugins/a11y-agents-codex/`, `.agents/skills/`, `.codex/agents/`, and `.a11y-agents/extensions/` when you want the Codex accessibility layer to travel with the project.
 
 ### Using Codex with Accessibility Rules
 
@@ -1048,9 +1037,15 @@ codex "Add a modal dialog to the settings page"
 codex "Create a data table for the analytics dashboard"
 ```
 
-Codex can use the Accessibility Agents skills directly from `.codex/skills/` or `~/.codex/skills/`. The experimental role files add narrower specialist passes when you want them.
+Codex uses the small router skill surface for discovery, then loads specialist references and custom subagents when the task needs them. If you install company or team extensions, the routers can include those extension agents in the same dispatch plan.
 
-For the current role list, install details, and limitations, see [Experimental Codex Multi-Agent Roles](guides/codex-experimental-multi-agent.md).
+For broad audits, ask Codex to use subagents explicitly:
+
+```bash
+codex "Review this branch for accessibility issues. Use accessibility-lead and dispatch subagents for ARIA, keyboard, forms, contrast, and any matching installed extensions. Label extension findings separately from WCAG findings."
+```
+
+For the current subagent list and installation details, see [Codex Subagents](guides/codex-experimental-multi-agent.md). For extension authoring, see [Accessibility Agents Extensions](guides/accessibility-agent-extensions.md).
 
 ### Removing
 
@@ -1072,7 +1067,7 @@ The extension includes 49 agent skills covering all accessibility domains plus 1
 
 ### Prerequisites
 
-> ⚠️ **IMPORTANT:** Always use the **latest version** of Gemini CLI. Google adds new model capabilities, API improvements, and features that enhance agent functionality.
+> **IMPORTANT:** Always use the **latest version** of Gemini CLI. Google adds new model capabilities, API improvements, and features that enhance agent functionality.
 
 **Required:**
 

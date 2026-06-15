@@ -73,6 +73,7 @@ $McpServerSrc = Join-Path $ScriptDir "mcp-server"
 $CodexConfigSrc = Join-Path $ScriptDir ".codex\config.toml"
 $CodexRolesSrc = Join-Path $ScriptDir ".codex\roles"
 $CodexSkillsSrc = Join-Path $ScriptDir "codex-skills"
+$CodexPluginSrc = Join-Path $ScriptDir "codex-plugin"
 
 # Auto-detect agents from source directory
 $Agents = @()
@@ -1492,35 +1493,113 @@ if ($InstallCopilotCli) {
 $CodexInstalled = $false
 $InstallCodex = $Codex.IsPresent
 
-if ((-not $InstallCodex) -and (-not $OptionalPlatformFlags) -and (-not $AutoApprove) -and ((Test-Path $CodexSkillsSrc) -or (Test-Path $CodexConfigSrc)) -and (Read-YesNo -Prompt 'Install Codex support?' -DefaultYes:$false)) {
+if ((-not $InstallCodex) -and (-not $OptionalPlatformFlags) -and (-not $AutoApprove) -and ((Test-Path $CodexPluginSrc) -or (Test-Path $CodexSkillsSrc) -or (Test-Path $CodexConfigSrc)) -and (Read-YesNo -Prompt 'Install Codex support?' -DefaultYes:$false)) {
     Write-Host ""
     Write-Host "  Would you also like to install Codex support?"
-    Write-Host "  This installs the Accessibility Agents skill pack and"
-    Write-Host "  optional experimental roles."
+    Write-Host "  This installs the Accessibility Agents Codex plugin,"
+    Write-Host "  router skills, subagents, and extension registry."
     $InstallCodex = $true
 }
 
-if ($InstallCodex -and ((Test-Path $CodexSkillsSrc) -or (Test-Path $CodexConfigSrc))) {
+if ($InstallCodex -and ((Test-Path $CodexPluginSrc) -or (Test-Path $CodexSkillsSrc) -or (Test-Path $CodexConfigSrc))) {
     Write-Host ""
     Write-Host "  Installing Codex support..."
 
     if ($Choice -eq "1") {
         $CodexTargetDir = Join-Path (Get-Location) ".codex"
-        $CodexPluginRoot = (Get-Location).Path
+        $CodexAgentsProfileDir = Join-Path (Get-Location) ".agents"
+        $CodexPluginDst = Join-Path (Join-Path (Get-Location) "plugins") "a11y-agents-codex"
+        $CodexExtensionDst = Join-Path (Get-Location) ".a11y-agents\extensions"
     }
     else {
         $CodexTargetDir = Join-Path $env:USERPROFILE ".codex"
-        $CodexPluginRoot = $env:USERPROFILE
+        $CodexAgentsProfileDir = Join-Path $env:USERPROFILE ".agents"
+        $CodexPluginDst = Join-Path (Join-Path $env:USERPROFILE "plugins") "a11y-agents-codex"
+        $CodexExtensionDst = Join-Path $env:USERPROFILE ".a11y-agents\extensions"
     }
 
     New-Item -ItemType Directory -Force -Path $CodexTargetDir | Out-Null
-    if (Test-Path $CodexConfigSrc) {
+    if (Test-Path $CodexPluginSrc) {
+        New-Item -ItemType Directory -Force -Path $CodexPluginDst | Out-Null
+        Get-ChildItem -Path $CodexPluginSrc -Force | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $CodexPluginDst -Recurse -Force
+        }
+        Add-ManifestEntry "codex-plugin/path:$(Join-Path $CodexPluginDst '.codex-plugin\plugin.json')"
+
+        $CodexPluginSkillsDst = Join-Path $CodexAgentsProfileDir "skills"
+        New-Item -ItemType Directory -Force -Path $CodexPluginSkillsDst | Out-Null
+        $CodexPluginSkillsSrc = Join-Path $CodexPluginSrc "skills"
+        if (Test-Path $CodexPluginSkillsSrc) {
+            Get-ChildItem -Path $CodexPluginSkillsSrc -Directory | ForEach-Object {
+                $Dst = Join-Path $CodexPluginSkillsDst $_.Name
+                New-Item -ItemType Directory -Force -Path $Dst | Out-Null
+                Copy-Item -Path (Join-Path $_.FullName "SKILL.md") -Destination (Join-Path $Dst "SKILL.md") -Force
+                Add-ManifestEntry "codex-router-skill/path:$(Join-Path $Dst 'SKILL.md')"
+            }
+            Write-Host "    + Codex router skills installed to $CodexPluginSkillsDst"
+        }
+
+        $CodexAgentsSrc = Join-Path $CodexPluginSrc "agents"
+        if (Test-Path $CodexAgentsSrc) {
+            $CodexAgentsDst = Join-Path $CodexTargetDir "agents"
+            New-Item -ItemType Directory -Force -Path $CodexAgentsDst | Out-Null
+            Get-ChildItem -Path $CodexAgentsSrc -Recurse -File -Filter "*.toml" | ForEach-Object {
+                $Rel = $_.FullName.Substring($CodexAgentsSrc.Length).TrimStart('\')
+                $Dst = Join-Path $CodexAgentsDst $Rel
+                New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Dst) | Out-Null
+                Copy-Item -Path $_.FullName -Destination $Dst -Force
+                Add-ManifestEntry "codex-agent/path:$Dst"
+            }
+            Write-Host "    + Codex subagents installed to $CodexAgentsDst"
+        }
+
+        $CodexExtensionsSrc = Join-Path $CodexPluginSrc "extensions"
+        if (Test-Path $CodexExtensionsSrc) {
+            New-Item -ItemType Directory -Force -Path $CodexExtensionDst | Out-Null
+            Get-ChildItem -Path $CodexExtensionsSrc -Recurse -File -Filter "extension.json" | ForEach-Object {
+                $Rel = $_.FullName.Substring($CodexExtensionsSrc.Length).TrimStart('\')
+                $Dst = Join-Path $CodexExtensionDst $Rel
+                New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Dst) | Out-Null
+                Copy-Item -Path $_.FullName -Destination $Dst -Force
+                Add-ManifestEntry "a11y-extension/path:$Dst"
+            }
+        }
+
+        $CodexMarketplaceDir = Join-Path $CodexAgentsProfileDir "plugins"
+        $CodexMarketplaceJson = Join-Path $CodexMarketplaceDir "marketplace.json"
+        New-Item -ItemType Directory -Force -Path $CodexMarketplaceDir | Out-Null
+        if (-not (Test-Path $CodexMarketplaceJson)) {
+            $Marketplace = @{
+                name = "accessibility-agents"
+                interface = @{ displayName = "Accessibility Agents" }
+                plugins = @(
+                    @{
+                        name = "a11y-agents-codex"
+                        source = @{ source = "local"; path = $CodexPluginDst }
+                        policy = @{ installation = "INSTALLED_BY_DEFAULT"; authentication = "ON_INSTALL" }
+                        category = "Developer Tools"
+                    }
+                )
+            }
+            $Marketplace | ConvertTo-Json -Depth 10 | Set-Content -Path $CodexMarketplaceJson -Encoding UTF8
+            Add-ManifestEntry "codex-marketplace/path:$CodexMarketplaceJson"
+            Write-Host "    + Codex plugin marketplace registered at $CodexMarketplaceJson"
+        }
+        elseif ((Get-Content -Path $CodexMarketplaceJson -Raw) -match '"a11y-agents-codex"') {
+            Write-Host "    + Codex plugin marketplace already includes a11y-agents-codex"
+        }
+        else {
+            Write-Host "    ! Existing Codex marketplace left unchanged at $CodexMarketplaceJson"
+            Write-Host "      Router skills and subagents were installed directly."
+        }
+    }
+    if ((-not (Test-Path $CodexPluginSrc)) -and (Test-Path $CodexConfigSrc)) {
         $CodexConfigDst = Join-Path $CodexTargetDir "config.toml"
         Merge-ConfigFile -SrcFile $CodexConfigSrc -DstFile $CodexConfigDst -Label "config.toml (Codex experimental roles)"
         Add-ManifestEntry "codex-config/path:$CodexConfigDst"
     }
 
-    if (Test-Path $CodexRolesSrc) {
+    if ((-not (Test-Path $CodexPluginSrc)) -and (Test-Path $CodexRolesSrc)) {
         $CodexRolesDst = Join-Path $CodexTargetDir "roles"
         New-Item -ItemType Directory -Force -Path $CodexRolesDst | Out-Null
         Get-ChildItem -Path $CodexRolesSrc -Recurse -File -Filter "*.toml" | ForEach-Object {
@@ -1532,7 +1611,7 @@ if ($InstallCodex -and ((Test-Path $CodexSkillsSrc) -or (Test-Path $CodexConfigS
         }
     }
 
-    if (Test-Path $CodexSkillsSrc) {
+    if ((-not (Test-Path $CodexPluginSrc)) -and (Test-Path $CodexSkillsSrc)) {
         $CodexSkillsDst = Join-Path $CodexTargetDir "skills"
         New-Item -ItemType Directory -Force -Path $CodexSkillsDst | Out-Null
         Get-ChildItem -Path $CodexSkillsSrc -Directory | ForEach-Object {
@@ -1554,8 +1633,8 @@ if ($InstallCodex -and ((Test-Path $CodexSkillsSrc) -or (Test-Path $CodexConfigS
     $CodexInstalled = $true
 
     Write-Host ""
-    Write-Host "  Codex will now load the Accessibility Agents skills."
-    Write-Host "  Experimental named roles are available through .codex\config.toml."
+    Write-Host "  Codex will now load the Accessibility Agents router skills."
+    Write-Host "  Codex subagents are available after starting a new Codex session."
     Write-Host "  Codex hook support exists upstream, but it is currently experimental and"
     Write-Host "  only intercepts Bash/local-shell flows, not all file-edit tools."
     Write-Host "  Run: codex `"Review this page for accessibility issues`"."
@@ -1907,6 +1986,10 @@ if ($CopilotCliInstalled) {
 if ($CodexInstalled) {
     Write-Host ""
     Write-Host "  Codex support installed to:"
+    if ($CodexPluginDst) { Write-Host "    -> $CodexPluginDst" }
+    if ($CodexPluginSkillsDst) { Write-Host "    -> $CodexPluginSkillsDst" }
+    if ($CodexAgentsDst) { Write-Host "    -> $CodexAgentsDst" }
+    if ($CodexExtensionDst) { Write-Host "    -> $CodexExtensionDst" }
     if ($CodexSkillsDst) { Write-Host "    -> $CodexSkillsDst" }
     if ($CodexConfigDst) { Write-Host "    -> $CodexConfigDst" }
     if ($CodexRolesDst) { Write-Host "    -> $CodexRolesDst" }
@@ -2001,7 +2084,7 @@ $InstallSummary.destinations = [ordered]@{
     claude     = @($TargetDir)
     copilot    = @($CopilotDestinations)
     copilotCli = @($CliAgentsDst, $CliSkillsDst) | Where-Object { $_ }
-    codex      = @($CodexSkillsDst, $CodexConfigDst, $CodexRolesDst) | Where-Object { $_ }
+    codex      = @($CodexPluginDst, $CodexPluginSkillsDst, $CodexAgentsDst, $CodexExtensionDst, $CodexSkillsDst, $CodexConfigDst, $CodexRolesDst) | Where-Object { $_ }
     gemini     = @($GeminiDst) | Where-Object { $_ }
     mcp        = @($McpDest) | Where-Object { $_ }
 }
@@ -2036,7 +2119,7 @@ Write-Host "    irm https://raw.githubusercontent.com/Community-Access/accessibi
 Write-Host ""
 if ($CodexInstalled) {
     Write-Host "  Start Codex in this project and try: `"Review this component for accessibility issues`""
-    Write-Host "  The Accessibility Agents skills should load from .codex\skills or ~\.codex\skills."
+    Write-Host "  The Accessibility Agents router skills and subagents should load after a new Codex session."
 }
 else {
     Write-Host "  Start Claude Code and try: `"Build a login form`""
