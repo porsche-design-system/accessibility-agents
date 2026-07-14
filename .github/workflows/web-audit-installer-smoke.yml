@@ -1,0 +1,52 @@
+name: Web Audit Installer Smoke Test
+
+on:
+  pull_request:
+    paths:
+      - 'install-web-audit.sh'
+      - 'scripts/installer-common.sh'
+      - 'scripts/web-audit-bundle.json'
+      - 'scripts/validate-web-audit-bundle.js'
+      - 'scripts/test-web-audit-installer.sh'
+      - 'templates/a11y-web-config-moderate.json'
+      - 'templates/copilot-instructions-web-audit.md'
+      - '.github/agents/**'
+      - '.github/skills/**'
+      - '.github/prompts/**'
+      - '.github/instructions/**'
+      - '.github/workflows/web-audit-installer-smoke.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'install-web-audit.sh'
+      - 'scripts/web-audit-bundle.json'
+      - 'scripts/validate-web-audit-bundle.js'
+      - 'scripts/test-web-audit-installer.sh'
+      - 'templates/a11y-web-config-moderate.json'
+      - 'templates/copilot-instructions-web-audit.md'
+      - '.github/workflows/web-audit-installer-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run focused installer smoke test
+        run: bash scripts/test-web-audit-installer.sh

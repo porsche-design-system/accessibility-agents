@@ -512,7 +512,7 @@ The NVDA Add-on Store is managed through [nvaccess/addon-datastore](https://gith
 | `sourceURL` | Yes | Source code repository URL |
 | `license` | Yes | License short name (e.g., "GPL v2") |
 
-**Source:** [submissionGuide.md](https://github.com/nvaccess/addon-datastore/blob/master/docs/submitters/submissionGuide.md), [jsonMetadata.md](https://github.com/nvaccess/addon-datastore/blob/master/docs/submitters/jsonMetadata.md)
+**Source:** [submissionGuide.md](https://github.com/nvaccess/addon-datastore/blob/master/docs/submitters/submissionGuide.md), [jsonMetadata.md](https://github.com/nvaccess/addon-datastore/blob/master/docs/design/jsonMetadata.md)
 
 ---
 
@@ -750,7 +750,7 @@ Reports include: addon name, date, NVDA version tested, severity summary table, 
 | NVDA Addon Template | [nvaccess/addonTemplate](https://github.com/nvaccess/addonTemplate) |
 | Add-on Store (addon-datastore) | [nvaccess/addon-datastore](https://github.com/nvaccess/addon-datastore) |
 | Submission Guide | [submissionGuide.md](https://github.com/nvaccess/addon-datastore/blob/master/docs/submitters/submissionGuide.md) |
-| JSON Metadata Schema | [jsonMetadata.md](https://github.com/nvaccess/addon-datastore/blob/master/docs/submitters/jsonMetadata.md) |
+| JSON Metadata Schema | [jsonMetadata.md](https://github.com/nvaccess/addon-datastore/blob/master/docs/design/jsonMetadata.md) |
 | Addon Store Validation | [nvaccess/addon-datastore-validation](https://github.com/nvaccess/addon-datastore-validation) |
 | NVDA User Guide | [nvaccess.org userGuide](https://www.nvaccess.org/files/nvda/documentation/userGuide.html) |
 | scriptHandler source | [scriptHandler.py](https://github.com/nvaccess/nvda/blob/master/source/scriptHandler.py) |

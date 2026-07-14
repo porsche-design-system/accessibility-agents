@@ -114,7 +114,7 @@ jobs:
     env:
       A11Y_ENFORCE_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.enforcement_mode || vars.A11Y_MARKDOWN_FAIL_ON || 'error' }}
       A11Y_OUTPUT_FORMAT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.output_format || vars.A11Y_MARKDOWN_FORMAT || 'both' }}
-      A11Y_REGRESSION_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.regression_mode || vars.A11Y_REGRESSION_MODE || 'false' }}
+      A11Y_REGRESSION_MODE: ${{ github.event_name == 'pull_request' && 'true' || github.event_name == 'workflow_dispatch' && github.event.inputs.regression_mode || vars.A11Y_REGRESSION_MODE || 'true' }}
     steps:
       - uses: actions/checkout@v6
         with:
