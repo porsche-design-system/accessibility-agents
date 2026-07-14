@@ -30,11 +30,11 @@ Review the changes before committing them. Project installation makes the custom
 
 ## Remote Bootstrap
 
-Review the installer before using a remote bootstrap command. During branch testing, the installer defaults to the `porsche-design-system/accessibility-agents` fork and its `issue/4560` branch:
+Review the installer before using a remote bootstrap command. During branch testing, the installer defaults to the `porsche-design-system/accessibility-agents` fork and its `main` branch:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/porsche-design-system/accessibility-agents/issue/4560/install-web-audit.sh |
-  bash -s -- --target /path/to/web-product --with-config --source-ref issue/4560
+curl -fsSL https://raw.githubusercontent.com/porsche-design-system/accessibility-agents/main/install-web-audit.sh |
+  bash -s -- --target /path/to/web-product --with-config --source-ref main
 ```
 
 Pin a release tag or commit:
