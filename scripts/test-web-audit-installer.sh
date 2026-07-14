@@ -14,6 +14,61 @@ cleanup() {
 }
 trap cleanup EXIT
 
+file_matches() {
+  node -e '
+    const fs = require("fs");
+    const content = fs.readFileSync(process.argv[1], "utf8");
+    process.exit(new RegExp(process.argv[2], "m").test(content) ? 0 : 1);
+  ' "$1" "$2"
+}
+
+match_count() {
+  node -e '
+    const fs = require("fs");
+    const content = fs.readFileSync(process.argv[1], "utf8");
+    const needle = process.argv[2];
+    process.stdout.write(String(content.split(needle).length - 1));
+  ' "$1" "$2"
+}
+
+list_files() {
+  node -e '
+    const fs = require("fs");
+    const path = require("path");
+    function walk(entry) {
+      if (!fs.existsSync(entry)) return;
+      const stat = fs.statSync(entry);
+      if (stat.isFile()) {
+        process.stdout.write(`${entry}\n`);
+        return;
+      }
+      fs.readdirSync(entry).sort().forEach((child) => walk(path.join(entry, child)));
+    }
+    process.argv.slice(1).forEach(walk);
+  ' "$@"
+}
+
+has_forbidden_installed_path() {
+  node -e '
+    const fs = require("fs");
+    const path = require("path");
+    const root = process.argv[1];
+    const forbidden = /(^|\/)(document|office|pdf|powerpoint|word|excel|mobile|desktop|markdown|epub|mcp-server)(-|\/)/;
+    let found = false;
+    function walk(entry) {
+      const stat = fs.statSync(entry);
+      if (stat.isFile()) {
+        const relative = path.relative(root, entry).split(path.sep).join("/");
+        if (forbidden.test(relative)) found = true;
+        return;
+      }
+      fs.readdirSync(entry).forEach((child) => walk(path.join(entry, child)));
+    }
+    walk(root);
+    process.exit(found ? 0 : 1);
+  ' "$1"
+}
+
 mkdir -p "$TARGET/.github" "$DRY_TARGET"
 printf '%s\n' "# Team instructions" > "$TARGET/.github/copilot-instructions.md"
 printf '%s\n' "full-installer-owned-file" > "$TARGET/.a11y-agent-manifest"
@@ -43,13 +98,27 @@ test ! -e "$TARGET/.claude"
 test ! -e "$TARGET/.codex"
 test ! -e "$TARGET/.gemini"
 
-rg -q "^# Team instructions$" "$TARGET/.github/copilot-instructions.md"
-test "$(rg -c "a11y-web-audit: start" "$TARGET/.github/copilot-instructions.md")" -eq 1
-if rg -q "^[[:space:]]+agent: document-accessibility-wizard$" "$TARGET/.github/agents/web-accessibility-wizard.agent.md"; then
+file_matches "$TARGET/.github/copilot-instructions.md" "^# Team instructions$"
+test "$(match_count "$TARGET/.github/copilot-instructions.md" "a11y-web-audit: start")" -eq 1
+if file_matches "$TARGET/.github/agents/web-accessibility-wizard.agent.md" "^\\s+agent: document-accessibility-wizard$"; then
   echo "ERROR: web-only wizard retains a document-agent dependency."
   exit 1
 fi
-if rg -q "WEB-ACCESSIBILITY-AUDIT\\.md" "$TARGET/.github"; then
+if node -e '
+  const fs = require("fs");
+  const path = require("path");
+  let found = false;
+  function walk(entry) {
+    const stat = fs.statSync(entry);
+    if (stat.isFile()) {
+      if (fs.readFileSync(entry, "utf8").includes("WEB-ACCESSIBILITY-AUDIT.md")) found = true;
+      return;
+    }
+    fs.readdirSync(entry).forEach((child) => walk(path.join(entry, child)));
+  }
+  walk(process.argv[1]);
+  process.exit(found ? 0 : 1);
+' "$TARGET/.github"; then
   echo "ERROR: installed customizations use the non-canonical report filename."
   exit 1
 fi
@@ -58,13 +127,13 @@ before_manifest="$(cksum "$TARGET/.a11y-web-audit-manifest")"
 bash "$INSTALLER" --target "$TARGET" --with-config --yes
 after_manifest="$(cksum "$TARGET/.a11y-web-audit-manifest")"
 test "$before_manifest" = "$after_manifest"
-test "$(rg -c "a11y-web-audit: start" "$TARGET/.github/copilot-instructions.md")" -eq 1
+test "$(match_count "$TARGET/.github/copilot-instructions.md" "a11y-web-audit: start")" -eq 1
 
 printf '%s\n' "local change" > "$TARGET/.github/agents/aria-specialist.agent.md"
 bash "$INSTALLER" --target "$TARGET" --yes
-rg -q "^local change$" "$TARGET/.github/agents/aria-specialist.agent.md"
+file_matches "$TARGET/.github/agents/aria-specialist.agent.md" "^local change$"
 bash "$INSTALLER" --target "$TARGET" --force --yes
-if rg -q "^local change$" "$TARGET/.github/agents/aria-specialist.agent.md"; then
+if file_matches "$TARGET/.github/agents/aria-specialist.agent.md" "^local change$"; then
   echo "ERROR: --force did not replace an allowlisted file."
   exit 1
 fi
@@ -77,14 +146,14 @@ fi
 INSTALLED_FILES=()
 while IFS= read -r file; do
   INSTALLED_FILES+=("$file")
-done < <(rg --files "$TARGET/.github/agents" "$TARGET/.github/skills")
+done < <(list_files "$TARGET/.github/agents" "$TARGET/.github/skills")
 node "$REPO_ROOT/scripts/validate-agents.js" \
   --quiet \
   --skip-url-checks \
   --files \
   "${INSTALLED_FILES[@]}"
 
-if rg --files "$TARGET" | rg -q '(^|/)(document|office|pdf|powerpoint|word|excel|mobile|desktop|markdown|epub|mcp-server)(-|/)'; then
+if has_forbidden_installed_path "$TARGET"; then
   echo "ERROR: a non-web resource was installed."
   exit 1
 fi
