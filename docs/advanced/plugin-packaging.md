@@ -93,24 +93,17 @@ cp -r .gemini/extensions/a11y-agents/ ~/.gemini/extensions/a11y-agents/
 
 Create a focused package with only the agents you need:
 
-**Web-only package** (no document agents):
+**Web-only GitHub Copilot package** (no document agents):
 
-```text
-.github/agents/
-  accessibility-lead.agent.md
-  aria-specialist.agent.md
-  modal-specialist.agent.md
-  contrast-master.agent.md
-  keyboard-navigator.agent.md
-  live-region-controller.agent.md
-  forms-specialist.agent.md
-  alt-text-headings.agent.md
-  tables-data-specialist.agent.md
-  link-checker.agent.md
-  accessibility-wizard.agent.md
-  testing-coach.agent.md
-  wcag-guide.agent.md
+Use [`scripts/web-audit-bundle.json`](../../scripts/web-audit-bundle.json) as the canonical allowlist. It includes `web-accessibility-wizard`, its web specialist and helper agents, required skills, prompts, and instructions. Do not maintain a second filename list in packaging documentation because agent dependencies change over time.
+
+Install the curated package into another repository:
+
+```bash
+bash install-web-audit.sh --target /path/to/web-product --with-config
 ```
+
+See [Install the GitHub Copilot Web Audit Bundle](../INSTALL-WEB-AUDIT.md) for scope, update behavior, and runtime limitations.
 
 **Document-only package:**
 

@@ -1,0 +1,65 @@
+{
+  "scan": {
+    "startUrl": "http://localhost:3000",
+    "urls": [
+      "/"
+    ],
+    "excludePatterns": [
+      "/api/*"
+    ],
+    "maxPages": 25,
+    "pageTimeout": 30000,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "waitForSelector": "main"
+  },
+  "rules": {
+    "enabled": "all",
+    "disabled": [],
+    "tags": [
+      "wcag2a",
+      "wcag2aa",
+      "wcag21a",
+      "wcag21aa",
+      "wcag22aa"
+    ]
+  },
+  "severity": {
+    "filter": [
+      "critical",
+      "serious",
+      "moderate"
+    ],
+    "failOn": [
+      "critical",
+      "serious"
+    ]
+  },
+  "report": {
+    "outputPath": "ACCESSIBILITY-AUDIT.md",
+    "organization": "by-page",
+    "includeRemediation": true,
+    "includeScreenshots": false,
+    "includePassed": true
+  },
+  "thresholds": {
+    "minScore": 70,
+    "maxCritical": 0,
+    "maxSerious": 5
+  },
+  "framework": {
+    "name": "auto",
+    "routeDiscovery": true
+  },
+  "ci": {
+    "failOnThreshold": true,
+    "sarifOutput": false,
+    "commentOnPR": true
+  },
+  "baseline": {
+    "reportPath": null,
+    "compareOnScan": false
+  }
+}
