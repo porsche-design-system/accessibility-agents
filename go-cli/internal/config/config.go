@@ -13,6 +13,7 @@ import (
 
 type InstallConfig struct {
 	Role           string   `json:"role"`
+	Bundle         string   `json:"bundle,omitempty"`
 	Scope          string   `json:"scope"`
 	Platforms      []string `json:"platforms"`
 	TeamConfigPath string   `json:"teamConfigPath,omitempty"`
@@ -23,12 +24,33 @@ type InstallConfig struct {
 	UpdatedAt      string   `json:"updatedAtUtc"`
 }
 
-func ValidateRole(role string) error {
-	switch role {
-	case "developer", "reviewer", "author", "full", "custom":
+func NormalizeBundle(bundle string) string {
+	switch strings.TrimSpace(strings.ToLower(bundle)) {
+	case "web-audit", "webaudit", "web_audit":
+		return "web-audit"
+	default:
+		return strings.TrimSpace(strings.ToLower(bundle))
+	}
+}
+
+func ValidateBundle(bundle string) error {
+	if bundle == "" {
+		return nil
+	}
+	switch NormalizeBundle(bundle) {
+	case "web-audit":
 		return nil
 	default:
-		return errors.New("role must be one of developer, reviewer, author, full, custom")
+		return errors.New("bundle must be web-audit")
+	}
+}
+
+func ValidateRole(role string) error {
+	switch role {
+	case "developer", "reviewer", "author", "full", "custom", "web-auditor":
+		return nil
+	default:
+		return errors.New("role must be one of developer, reviewer, author, full, custom, web-auditor")
 	}
 }
 

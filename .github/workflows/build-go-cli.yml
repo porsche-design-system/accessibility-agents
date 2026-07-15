@@ -6,6 +6,8 @@ on:
       - "go-cli/**"
       - "scripts/build-go-cli.ps1"
       - "scripts/build-go-cli.sh"
+      - "scripts/web-audit-bundle.json"
+      - "install-web-audit.sh"
       - ".github/workflows/build-go-cli.yml"
       - "README.md"
       - "docs/getting-started.md"

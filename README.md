@@ -247,7 +247,40 @@ Have a great accessibility-themed thinking phrase? Submit a PR to add it to our 
 
 ## Quick Start
 
-### One-liner install
+### Web product teams (recommended for Copilot project installs)
+
+If you need **web-only** GitHub Copilot agents committed into each product repository (team parity + Copilot Coding Agent), use the focused web audit bundle:
+
+```bash
+git clone https://github.com/porsche-design-system/accessibility-agents.git
+cd accessibility-agents
+bash install-web-audit.sh --target /path/to/web-product --with-config --dry-run
+bash install-web-audit.sh --target /path/to/web-product --with-config
+```
+
+Or with GitHub Skills CLI after `gh skill install`:
+
+```bash
+gh skill install porsche-design-system/accessibility-agents
+cd /path/to/web-product
+gh skill setup porsche-design-system/accessibility-agents --scope project --bundle web-audit --with-config --yes
+```
+
+See the [Web Product Team Install Guide](docs/guides/web-product-team-install.md) for version pinning, updates, security-conscious install paths, and GitHub Actions automation.
+
+### Full suite: GitHub Skills CLI (recommended)
+
+```bash
+gh skill install Community-Access/accessibility-agents
+gh skill setup Community-Access/accessibility-agents
+gh skill health Community-Access/accessibility-agents
+```
+
+See [Installation Guide 5.0](docs/INSTALLATION-GUIDE-5.0.md) for platform-specific steps.
+
+### Full suite: legacy one-liner install
+
+The shell installers remain available for teams that prefer script-based setup without `gh skill`:
 
 **Windows (PowerShell):**
 
@@ -275,17 +308,7 @@ bash install.sh --project --copilot --yes --no-auto-update --dry-run
 .\install.ps1 -Project -Copilot -Yes -NoAutoUpdate -DryRun
 ```
 
-See the full [Getting Started Guide](docs/getting-started.md) for all installation options, manual setup, global vs project install, auto-updates, and platform-specific details.
-
-### Focused Copilot web audit install
-
-Web product teams that need only the GitHub Copilot guided web-audit workflow can use the separate macOS/Linux installer:
-
-```bash
-bash install-web-audit.sh --target /path/to/web-product --with-config
-```
-
-It copies an explicit web-only allowlist into the target repository and leaves `install.sh` unchanged. It does not install document, mobile, desktop, Claude, Codex, Gemini, or MCP resources. See [Install the GitHub Copilot Web Audit Bundle](docs/INSTALL-WEB-AUDIT.md) for prerequisites, remote installation, updates, and limitations.
+See the full [Getting Started Guide](docs/getting-started.md) for manual setup, global vs project install, auto-updates, and platform-specific details.
 
 Accessibility Agents v6 also introduces extension packs for company, team, framework, regional, and design-system standards. Installed extensions can contribute first-class agents and rules to the same router workflows as the bundled core agents.
 

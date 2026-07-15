@@ -1,0 +1,78 @@
+name: Install Web Audit Bundle
+description: Install or update the focused GitHub Copilot web accessibility audit bundle in a repository.
+
+inputs:
+  target_path:
+    description: Path to the repository receiving the bundle
+    required: false
+    default: '.'
+  source_root:
+    description: Path to the accessibility-agents checkout containing install-web-audit.sh
+    required: false
+    default: ''
+  source_ref:
+    description: Branch, tag, or commit for remote bootstrap when source_repository is set
+    required: false
+    default: 'main'
+  source_repository:
+    description: Git clone URL for the accessibility-agents source (optional remote bootstrap)
+    required: false
+    default: ''
+  with_config:
+    description: Add moderate .a11y-web-config.json when absent
+    required: false
+    default: 'true'
+  force:
+    description: Replace allowlisted bundle files
+    required: false
+    default: 'false'
+  dry_run:
+    description: Preview changes without writing files
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve source root
+      id: source
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.source_root }}" ]; then
+          ROOT="${{ inputs.source_root }}"
+        elif [ -n "${{ inputs.source_repository }}" ]; then
+          git clone --quiet --filter=blob:none "${{ inputs.source_repository }}" "$RUNNER_TEMP/accessibility-agents"
+          git -C "$RUNNER_TEMP/accessibility-agents" checkout --quiet "${{ inputs.source_ref }}"
+          ROOT="$RUNNER_TEMP/accessibility-agents"
+        elif [ -f "$GITHUB_WORKSPACE/install-web-audit.sh" ] && [ -f "$GITHUB_WORKSPACE/scripts/web-audit-bundle.json" ]; then
+          ROOT="$GITHUB_WORKSPACE"
+        else
+          echo "Could not resolve accessibility-agents source root. Set source_root or source_repository." >&2
+          exit 1
+        fi
+        if [ ! -f "$ROOT/install-web-audit.sh" ]; then
+          echo "Missing install-web-audit.sh in $ROOT" >&2
+          exit 1
+        fi
+        echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Run web audit bundle installer
+      shell: bash
+      run: |
+        SOURCE_ROOT="${{ steps.source.outputs.root }}"
+        TARGET_PATH="${{ inputs.target_path }}"
+        ARGS=(--target "$TARGET_PATH")
+        if [ "${{ inputs.with_config }}" = "true" ]; then
+          ARGS+=(--with-config)
+        fi
+        if [ "${{ inputs.force }}" = "true" ]; then
+          ARGS+=(--force)
+        fi
+        if [ "${{ inputs.dry_run }}" = "true" ]; then
+          ARGS+=(--dry-run)
+        fi
+        bash "$SOURCE_ROOT/install-web-audit.sh" "${ARGS[@]}"

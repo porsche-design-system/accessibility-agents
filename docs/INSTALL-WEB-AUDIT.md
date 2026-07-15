@@ -2,6 +2,8 @@
 
 The focused installer adds only the GitHub Copilot agents, skills, prompts, and instructions used for guided web accessibility audits. It does not install the repository's document, mobile, desktop, Claude, Codex, Gemini, or MCP packages.
 
+For the full web product team workflow (install paths, version pinning, and automation), see [Web Product Team Install Guide](guides/web-product-team-install.md).
+
 ## Requirements
 
 - macOS or Linux
@@ -28,19 +30,32 @@ When the web product is the current directory:
 
 Review the changes before committing them. Project installation makes the customizations available to the team and to Copilot Coding Agent.
 
+## GitHub Skills CLI
+
+After `gh skill install porsche-design-system/accessibility-agents`, install the same bundle into the current Git project:
+
+```bash
+cd /path/to/web-product
+gh skill setup porsche-design-system/accessibility-agents --scope project --bundle web-audit --with-config --yes
+```
+
+The `--role web-auditor` alias selects the same bundle. This invokes the same allowlist as `install-web-audit.sh`.
+
 ## Remote Bootstrap
 
-Review the installer before using a remote bootstrap command. During branch testing, the installer defaults to the `porsche-design-system/accessibility-agents` fork and its `main` branch:
+Review the installer before using a remote bootstrap command. The default source repository is `porsche-design-system/accessibility-agents`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/porsche-design-system/accessibility-agents/main/install-web-audit.sh |
   bash -s -- --target /path/to/web-product --with-config --source-ref main
 ```
 
-Pin a release tag or commit:
+To install from a different fork (for example upstream `Community-Access/accessibility-agents`), set `A11Y_WEB_AUDIT_REPOSITORY` before running the installer.
+
+Pin a release tag or commit. Bundle releases use tags such as `web-audit-bundle/1.0.0` (see [Web audit bundle releases](guides/web-audit-bundle-releases.md)):
 
 ```bash
-REF=YOUR_TAG_OR_COMMIT
+REF=web-audit-bundle/1.0.0
 curl -fsSL "https://raw.githubusercontent.com/porsche-design-system/accessibility-agents/$REF/install-web-audit.sh" |
   bash -s -- --target /path/to/web-product --source-ref "$REF"
 ```
@@ -135,7 +150,7 @@ An internal fork can pin upstream revisions and add organization-specific rules.
 
 ### GitHub Skills CLI
 
-`gh skill install` and `gh skill setup` are the intended broader distribution path. This repository does not yet enforce role-based file filtering in its setup utility, so it cannot currently provide the same deterministic web-only Copilot subset.
+`gh skill install` and `gh skill setup --bundle web-audit` use the same allowlist as this installer. Use `--scope project` so files are written into the product repository for team and Copilot Coding Agent parity.
 
 ### GitHub Action
 

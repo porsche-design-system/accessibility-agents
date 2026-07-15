@@ -1,0 +1,92 @@
+name: Web Audit Bundle Update PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_repository:
+        description: 'Target repository (owner/repo) to update'
+        required: true
+      source_ref:
+        description: 'Branch, tag, or commit for the bundle source'
+        required: false
+        default: 'main'
+      with_config:
+        description: 'Add moderate .a11y-web-config.json when absent'
+        required: false
+        default: true
+        type: boolean
+      force:
+        description: 'Replace allowlisted bundle files'
+        required: false
+        default: true
+        type: boolean
+      base_branch:
+        description: 'Base branch in the target repository'
+        required: false
+        default: 'main'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    name: Open bundle update PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate target repository input
+        shell: bash
+        run: |
+          if ! [[ "${{ github.event.inputs.target_repository }}" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+            echo "target_repository must use owner/repo format"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.target_repository }}
+          token: ${{ secrets.WEB_AUDIT_UPDATE_TOKEN || github.token }}
+          ref: ${{ github.event.inputs.base_branch }}
+          path: target-repo
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.source_ref }}
+          path: accessibility-agents
+
+      - name: Preview bundle update
+        uses: ./.github/actions/install-web-audit-bundle
+        with:
+          target_path: target-repo
+          source_root: accessibility-agents
+          with_config: ${{ github.event.inputs.with_config }}
+          force: ${{ github.event.inputs.force }}
+          dry_run: 'true'
+
+      - name: Apply bundle update
+        uses: ./.github/actions/install-web-audit-bundle
+        with:
+          target_path: target-repo
+          source_root: accessibility-agents
+          with_config: ${{ github.event.inputs.with_config }}
+          force: ${{ github.event.inputs.force }}
+          dry_run: 'false'
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.WEB_AUDIT_UPDATE_TOKEN || github.token }}
+          path: target-repo
+          commit-message: 'chore(a11y): update web audit Copilot bundle'
+          branch: chore/web-audit-bundle-update
+          delete-branch: true
+          title: 'chore(a11y): update web audit Copilot bundle'
+          body: |
+            Automated update of the focused GitHub Copilot web accessibility audit bundle.
+
+            Source ref: `${{ github.event.inputs.source_ref }}`
+            Force replace: `${{ github.event.inputs.force }}`
+
+            Review `.a11y-web-audit-install-summary.json` and the `.github/` diff before merging.

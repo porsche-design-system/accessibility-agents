@@ -234,7 +234,26 @@ To uninstall:
 gh skill uninstall Community-Access/accessibility-agents
 ```
 
-Legacy script installers and uninstallers were removed in this branch.
+#### Web product teams: focused Copilot bundle
+
+For web-only agents committed into a product repository (team + Copilot Coding Agent), use the web audit bundle instead of copying the full `.github/` tree:
+
+```bash
+bash install-web-audit.sh --target /path/to/web-product --with-config
+```
+
+Or after `gh skill install`:
+
+```bash
+cd /path/to/web-product
+gh skill setup porsche-design-system/accessibility-agents --scope project --bundle web-audit --with-config --yes
+```
+
+See the [Web Product Team Install Guide](guides/web-product-team-install.md).
+
+#### Full suite: legacy script installers
+
+The repository still ships `install.sh` and `install.ps1` for the complete multi-platform install. Prefer `gh skill install` for new setups when GitHub CLI 2.90+ and the `gh-skill` extension are available.
 
 #### Manual Setup
 
@@ -490,14 +509,30 @@ This installs Copilot agents to your VS Code user profile folder. After installi
 
 > **First use:** After installation, open the agent picker dropdown (the model/agent selector at the top of the Copilot Chat panel) and select the agent you want to use. Custom agents do not appear in `@` autocomplete until you have selected them from the picker at least once.
 
-#### Option 2: Per-project
+#### Option 2: Per-project (web audit bundle)
 
-Copy the `.github` directory into your project so the agents travel with the repo.
+For web product teams, install the focused allowlist into the product repository:
+
+```bash
+bash install-web-audit.sh --target /path/to/your/project --with-config
+```
+
+Or:
+
+```bash
+cd /path/to/your/project
+gh skill setup porsche-design-system/accessibility-agents --scope project --bundle web-audit --with-config --yes
+```
+
+See [Web Product Team Install Guide](guides/web-product-team-install.md).
+
+#### Option 3: Per-project (full suite)
+
+Copy the full `.github` directory into your project so all agents travel with the repo:
 
 ```bash
 git clone https://github.com/Community-Access/accessibility-agents.git
-cd a11y-agent-team
-cp -r .github /path/to/your/project/
+cp -r accessibility-agents/.github /path/to/your/project/
 ```
 
 Or run setup inside that project:
@@ -507,7 +542,7 @@ cd /path/to/your/project
 gh skill setup Community-Access/accessibility-agents --scope project
 ```
 
-#### Option 3: Per-project (via a11y-copilot-init)
+#### Option 4: Per-project (via a11y-copilot-init)
 
 If you installed globally with `--copilot`, run `a11y-copilot-init` inside any project to copy the agents:
 

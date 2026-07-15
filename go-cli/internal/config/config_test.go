@@ -27,6 +27,24 @@ func TestPathForProjectAndGlobal(t *testing.T) {
 	}
 }
 
+func TestValidateBundle(t *testing.T) {
+	if err := ValidateBundle("web-audit"); err != nil {
+		t.Fatalf("ValidateBundle(web-audit) error = %v", err)
+	}
+	if err := ValidateBundle(""); err != nil {
+		t.Fatalf("ValidateBundle(empty) error = %v", err)
+	}
+	if err := ValidateBundle("document"); err == nil {
+		t.Fatalf("ValidateBundle(document) expected error")
+	}
+}
+
+func TestNormalizeBundle(t *testing.T) {
+	if got := NormalizeBundle("Web-Audit"); got != "web-audit" {
+		t.Fatalf("NormalizeBundle() = %q, want web-audit", got)
+	}
+}
+
 func TestSaveAndLoadNormalizesPlatforms(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.json")
 	input := InstallConfig{

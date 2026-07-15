@@ -250,7 +250,13 @@ gh skill setup Community-Access/accessibility-agents --yes
 
 # With team config
 gh skill setup Community-Access/accessibility-agents --config team-config.json
+
+# Web product teams: project-scoped web-audit bundle
+cd /path/to/web-product
+gh skill setup porsche-design-system/accessibility-agents --scope project --bundle web-audit --with-config --yes
 ```
+
+See [Web Product Team Install Guide](guides/web-product-team-install.md) for version pinning and automation.
 
 **Output:**
 

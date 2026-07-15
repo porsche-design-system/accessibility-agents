@@ -49,6 +49,9 @@ go run ./go-cli/cmd/setup
 
 # Or using the built binary
 a11y-agents-setup --role developer --scope global --yes
+
+# Web product teams: install the focused Copilot bundle into the current Git project
+a11y-agents-setup --scope project --bundle web-audit --with-config --yes --source-root /path/to/accessibility-agents
 ```text
 
 ### Functionality
