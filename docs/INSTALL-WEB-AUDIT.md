@@ -1,14 +1,18 @@
-# Install the GitHub Copilot Web Audit Bundle
+# Install the Web Audit Bundle
 
-The focused installer adds only the GitHub Copilot agents, skills, prompts, and instructions used for guided web accessibility audits. It does not install the repository's document, mobile, desktop, Claude, Codex, Gemini, or MCP packages.
+The focused installer adds only the GitHub Copilot and Claude Code agents, skills, prompts, commands, and instructions used for guided web accessibility audits. It does not install the repository's document, mobile, desktop, Codex, Gemini, or MCP packages.
 
 ## Requirements
 
 - macOS or Linux
-- GitHub Copilot in a current VS Code release
 - Node.js 18 or newer
 - npm for runtime axe-core scans
 - A local checkout of the web product to audit
+
+Platform-specific requirements:
+
+- **GitHub Copilot:** a current VS Code release with Copilot Chat
+- **Claude Code:** Claude Code CLI or VS Code integration with project `.claude/` discovery
 
 Automated checks cannot establish WCAG conformance. Include keyboard-only and assistive-technology testing in the audit.
 
@@ -20,13 +24,20 @@ Run the installer from this repository and target the web product repository:
 bash install-web-audit.sh --target /path/to/web-product --with-config
 ```
 
+Install only one platform when needed:
+
+```bash
+bash install-web-audit.sh --target /path/to/web-product --platform copilot --with-config
+bash install-web-audit.sh --target /path/to/web-product --platform claude --with-config
+```
+
 When the web product is the current directory:
 
 ```bash
 /path/to/accessibility-agents/install-web-audit.sh --with-config
 ```
 
-Review the changes before committing them. Project installation makes the customizations available to the team and to Copilot Coding Agent.
+Review the changes before committing them. Project installation makes the customizations available to the team and to Copilot Coding Agent or Claude Code.
 
 ## Remote Bootstrap
 
@@ -55,6 +66,7 @@ A11Y_WEB_AUDIT_REPOSITORY=git@github.com:example/accessibility-agents.git \
 ## Installer Options
 
 - `--target PATH`: target repository; defaults to the current directory.
+- `--platform MODE`: `copilot`, `claude`, or `both`; defaults to `both`.
 - `--with-config`: add the moderate `.a11y-web-config.json` profile when the target does not already have one.
 - `--dry-run`: show planned changes without writing files.
 - `--check`: validate the source bundle, Node/npm readiness, and target completeness.
@@ -62,11 +74,13 @@ A11Y_WEB_AUDIT_REPOSITORY=git@github.com:example/accessibility-agents.git \
 - `--yes`: accepted for non-interactive automation.
 - `--source-ref REF`: branch, tag, or commit used by remote bootstrap.
 
-Existing target files are skipped unless `--force` is supplied. The focused accessibility block in `.github/copilot-instructions.md` is updated between managed markers while content outside the markers is preserved.
+Existing target files are skipped unless `--force` is supplied. The focused accessibility block in `.github/copilot-instructions.md` and `CLAUDE.md` is updated between managed markers while content outside the markers is preserved.
 
 ## Installed Scope
 
 [`scripts/web-audit-bundle.json`](../scripts/web-audit-bundle.json) is the canonical allowlist. It currently installs:
+
+### GitHub Copilot
 
 - `web-accessibility-wizard` and web accessibility specialists
 - web-only analysis, remediation, reporting, CI bridge, and optional Playwright helper agents
@@ -74,10 +88,19 @@ Existing target files are skipped unless `--force` is supplied. The focused acce
 - web audit prompts
 - semantic HTML, ARIA, CSS, testing, terminology, and multi-agent reliability instructions
 - a focused managed section in `.github/copilot-instructions.md`
+
+### Claude Code
+
+- `web-accessibility-wizard` and `accessibility-lead` orchestrators in `.claude/agents/`
+- matching web specialists and hidden helpers in `.claude/specialists/`
+- web audit skills in `.claude/skills/`
+- web audit slash commands in `.claude/commands/` (`/audit`, `/aria`, `/keyboard`, and related specialists)
+- a trimmed `.claude/AGENTS.md` describing only the web audit team
+- a focused managed section in `CLAUDE.md`
+
+### Shared
+
 - `.a11y-web-config.json` only when `--with-config` is requested and no config exists
-
-The installer writes:
-
 - `.a11y-web-audit-manifest`
 - `.a11y-web-audit-install-summary.json`
 
@@ -85,12 +108,22 @@ These names are separate from the full installer's files, so both installers can
 
 ## Run an Audit
 
+### GitHub Copilot
+
 1. Start the web product locally.
 2. Open its repository in VS Code.
 3. Open Copilot Chat and invoke `@web-accessibility-wizard`.
 4. Complete Phase 0 and provide the local URL, framework, pages, audit method, thoroughness, and target standard.
 5. Select a deep-dive audit when you want code review across every web specialist.
 6. Review the generated `ACCESSIBILITY-AUDIT.md`.
+
+### Claude Code
+
+1. Start the web product locally.
+2. Open its repository in your editor or terminal.
+3. Invoke the `web-accessibility-wizard` agent or run `/audit`.
+4. Complete Phase 0 and provide the same discovery details as the Copilot workflow.
+5. Review the generated `ACCESSIBILITY-AUDIT.md`.
 
 Phase 9 can run axe-core through `npx @axe-core/cli`. The focused installer does not install Playwright, Chromium, or an MCP server. Phase 10 behavioral scans run only when compatible tools already exist; otherwise the report must record the limitation and include manual testing steps.
 
@@ -114,7 +147,7 @@ bash install-web-audit.sh --target /path/to/web-product --force
 
 The manifest contains paths installed by this bundle. Before removal, review it and preserve any files subsequently customized by the product team.
 
-Remove ordinary paths listed in `.a11y-web-audit-manifest`, except the `managed:` entry. Remove only the block between these markers from `.github/copilot-instructions.md`:
+Remove ordinary paths listed in `.a11y-web-audit-manifest`, except `managed:` entries. Remove only the block between these markers from `.github/copilot-instructions.md` and `CLAUDE.md`:
 
 ```text
 <!-- a11y-web-audit: start -->
@@ -139,10 +172,10 @@ An internal fork can pin upstream revisions and add organization-specific rules.
 
 ### GitHub Action
 
-The repository's action can add repeatable CI scanning and SARIF output. It complements the guided Copilot audit but does not install or replace the wizard and specialist agents.
+The repository's action can add repeatable CI scanning and SARIF output. It complements the guided audit workflow but does not install or replace the wizard and specialist agents.
 
 ### MCP or VS Code Package
 
 A future web-only MCP package could provide Playwright behavioral scans without document tooling. The current MCP server statically includes broader document capabilities, so it is deliberately excluded from this installer.
 
-For current Copilot project use, the focused installer is the recommended option because its allowlist is reviewable, deterministic, compatible with private repositories, and immediately discoverable from `.github`.
+For current project use, the focused installer is the recommended option because its allowlist is reviewable, deterministic, compatible with private repositories, and immediately discoverable from `.github/` and `.claude/`.

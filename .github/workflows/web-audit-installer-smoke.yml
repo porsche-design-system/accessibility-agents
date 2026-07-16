@@ -10,10 +10,15 @@ on:
       - 'scripts/test-web-audit-installer.sh'
       - 'templates/a11y-web-config-moderate.json'
       - 'templates/copilot-instructions-web-audit.md'
+      - 'templates/claude-instructions-web-audit.md'
+      - 'templates/claude-agents-web-audit.md'
       - '.github/agents/**'
       - '.github/skills/**'
       - '.github/prompts/**'
       - '.github/instructions/**'
+      - '.claude/agents/**'
+      - '.claude/specialists/**'
+      - 'claude-code-plugin/commands/**'
       - '.github/workflows/web-audit-installer-smoke.yml'
   push:
     branches:
@@ -25,6 +30,11 @@ on:
       - 'scripts/test-web-audit-installer.sh'
       - 'templates/a11y-web-config-moderate.json'
       - 'templates/copilot-instructions-web-audit.md'
+      - 'templates/claude-instructions-web-audit.md'
+      - 'templates/claude-agents-web-audit.md'
+      - '.claude/agents/**'
+      - '.claude/specialists/**'
+      - 'claude-code-plugin/commands/**'
       - '.github/workflows/web-audit-installer-smoke.yml'
   workflow_dispatch:
 

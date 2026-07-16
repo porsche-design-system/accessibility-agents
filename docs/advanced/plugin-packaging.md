@@ -103,7 +103,7 @@ Install the curated package into another repository:
 bash install-web-audit.sh --target /path/to/web-product --with-config
 ```
 
-See [Install the GitHub Copilot Web Audit Bundle](../INSTALL-WEB-AUDIT.md) for scope, update behavior, and runtime limitations.
+See [Install the Web Audit Bundle](../INSTALL-WEB-AUDIT.md) for scope, update behavior, and runtime limitations.
 
 **Document-only package:**
 

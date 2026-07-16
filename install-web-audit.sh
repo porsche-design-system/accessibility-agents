@@ -1,8 +1,8 @@
 #!/bin/bash
-# Install the focused GitHub Copilot web accessibility audit bundle.
+# Install the focused web accessibility audit bundle for GitHub Copilot and Claude Code.
 #
 # Usage:
-#   bash install-web-audit.sh [--target PATH] [--with-config] [--force]
+#   bash install-web-audit.sh [--target PATH] [--platform both|copilot|claude] [--with-config] [--force]
 #   bash install-web-audit.sh --dry-run
 #   bash install-web-audit.sh --check
 #   curl -fsSL URL/install-web-audit.sh | bash -s -- --target PATH
@@ -15,6 +15,7 @@ CHECK_MODE=false
 FORCE=false
 WITH_CONFIG=false
 ASSUME_YES=false
+PLATFORM="both"
 SOURCE_REF="${A11Y_WEB_AUDIT_REF:-main}"
 SOURCE_REPOSITORY="${A11Y_WEB_AUDIT_REPOSITORY:-https://github.com/porsche-design-system/accessibility-agents.git}"
 DOWNLOADED=false
@@ -22,10 +23,11 @@ TMPDIR_DL=""
 
 usage() {
   printf '%s\n' \
-    "GitHub Copilot web accessibility audit installer" \
+    "Web accessibility audit installer (GitHub Copilot and Claude Code)" \
     "" \
     "Options:" \
     "  --target PATH       Target repository (default: current directory)" \
+    "  --platform MODE     copilot, claude, or both (default: both)" \
     "  --with-config       Add the moderate .a11y-web-config.json when absent" \
     "  --force             Replace allowlisted files managed by this bundle" \
     "  --dry-run           Preview changes without writing files" \
@@ -43,6 +45,12 @@ while [ "$#" -gt 0 ]; do
       shift 2
       ;;
     --target=*) TARGET_DIR="${1#*=}"; shift ;;
+    --platform)
+      [ "$#" -ge 2 ] || { echo "Error: --platform requires a value."; exit 2; }
+      PLATFORM="$2"
+      shift 2
+      ;;
+    --platform=*) PLATFORM="${1#*=}"; shift ;;
     --with-config) WITH_CONFIG=true; shift ;;
     --force) FORCE=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
@@ -58,6 +66,14 @@ while [ "$#" -gt 0 ]; do
     *) echo "Error: unknown option: $1"; usage; exit 2 ;;
   esac
 done
+
+case "$PLATFORM" in
+  copilot|claude|both) ;;
+  *)
+    echo "Error: --platform must be copilot, claude, or both."
+    exit 2
+    ;;
+esac
 
 OS_NAME="${A11Y_WEB_AUDIT_UNAME:-$(uname -s)}"
 case "$OS_NAME" in
@@ -104,6 +120,7 @@ TARGET_DIR="$(cd "$TARGET_DIR" 2>/dev/null && pwd)" || {
 VALIDATOR="$SCRIPT_DIR/scripts/validate-web-audit-bundle.js"
 MANIFEST_SOURCE="$SCRIPT_DIR/scripts/web-audit-bundle.json"
 INSTRUCTION_SOURCE="$SCRIPT_DIR/templates/copilot-instructions-web-audit.md"
+CLAUDE_INSTRUCTION_SOURCE="$SCRIPT_DIR/templates/claude-instructions-web-audit.md"
 CONFIG_SOURCE="$SCRIPT_DIR/templates/a11y-web-config-moderate.json"
 INSTALL_MANIFEST="$TARGET_DIR/.a11y-web-audit-manifest"
 SUMMARY_FILE="$TARGET_DIR/.a11y-web-audit-install-summary.json"
@@ -112,6 +129,7 @@ node "$VALIDATOR"
 
 if [ "$CHECK_MODE" = true ]; then
   echo "Source bundle: valid"
+  echo "Platform: $PLATFORM"
   echo "Node.js: $(node --version)"
   if command -v npm >/dev/null 2>&1; then
     echo "npm: $(npm --version)"
@@ -127,7 +145,7 @@ if [ "$CHECK_MODE" = true ]; then
     if [ ! -f "$TARGET_DIR/$relative_path" ]; then
       MISSING=$((MISSING + 1))
     fi
-  done < <(node "$VALIDATOR" --list)
+  done < <(node "$VALIDATOR" --list --platform "$PLATFORM")
   if [ "$MISSING" -eq 0 ]; then
     echo "Target bundle: complete"
     exit 0
@@ -137,7 +155,7 @@ if [ "$CHECK_MODE" = true ]; then
 fi
 
 if [ "$DRY_RUN" = true ]; then
-  echo "Dry run for: $TARGET_DIR"
+  echo "Dry run for: $TARGET_DIR (platform: $PLATFORM)"
 fi
 
 INSTALLED=0
@@ -193,12 +211,16 @@ install_file() {
 while IFS=$'\t' read -r category relative_path; do
   [ -n "$relative_path" ] || continue
   install_file "$relative_path"
-done < <(node "$VALIDATOR" --list)
+done < <(node "$VALIDATOR" --list --platform "$PLATFORM")
 
-merge_instructions() {
-  local destination="$TARGET_DIR/.github/copilot-instructions.md"
+merge_marked_instructions() {
+  local destination="$1"
+  local source_file="$2"
+  local managed_entry="$3"
+  local label="$4"
+
   if [ "$DRY_RUN" = true ]; then
-    echo "would merge  .github/copilot-instructions.md"
+    echo "would merge  $label"
     return
   fi
 
@@ -217,13 +239,27 @@ merge_instructions() {
   fi
   while IFS= read -r line || [ -n "$line" ]; do
     printf '%s\n' "$line" >> "$temporary"
-  done < "$INSTRUCTION_SOURCE"
+  done < "$source_file"
   mv "$temporary" "$destination"
-  add_manifest_entry "managed:.github/copilot-instructions.md"
-  echo "merge  .github/copilot-instructions.md"
+  add_manifest_entry "$managed_entry"
+  echo "merge  $label"
 }
 
-merge_instructions
+if [ "$PLATFORM" = "copilot" ] || [ "$PLATFORM" = "both" ]; then
+  merge_marked_instructions \
+    "$TARGET_DIR/.github/copilot-instructions.md" \
+    "$INSTRUCTION_SOURCE" \
+    "managed:.github/copilot-instructions.md" \
+    ".github/copilot-instructions.md"
+fi
+
+if [ "$PLATFORM" = "claude" ] || [ "$PLATFORM" = "both" ]; then
+  merge_marked_instructions \
+    "$TARGET_DIR/CLAUDE.md" \
+    "$CLAUDE_INSTRUCTION_SOURCE" \
+    "managed:CLAUDE.md" \
+    "CLAUDE.md"
+fi
 
 if [ "$WITH_CONFIG" = true ]; then
   if [ -e "$TARGET_DIR/.a11y-web-config.json" ]; then
@@ -247,14 +283,20 @@ fi
 printf '%s\n' "${MANIFEST_ENTRIES[@]}" > "$INSTALL_MANIFEST"
 
 NOTES="Playwright and MCP runtimes are not installed. Behavioral scans use pre-existing tools when available."
-SUMMARY_JSON="{\"schemaVersion\":\"1.0\",\"operation\":\"install-web-audit\",\"scope\":\"project\",\"targetDir\":\"$(json_escape "$TARGET_DIR")\",\"bundleVersion\":\"$(json_escape "$(node -p "require('$MANIFEST_SOURCE').bundleVersion")")\",\"installed\":$INSTALLED,\"replaced\":$REPLACED,\"skipped\":$SKIPPED,\"withConfig\":$(json_bool "$WITH_CONFIG"),\"forced\":$(json_bool "$FORCE"),\"manifestPath\":\"$(json_escape "$INSTALL_MANIFEST")\",\"note\":\"$(json_escape "$NOTES")\"}"
+SUMMARY_JSON="{\"schemaVersion\":\"1.0\",\"operation\":\"install-web-audit\",\"scope\":\"project\",\"platform\":\"$(json_escape "$PLATFORM")\",\"targetDir\":\"$(json_escape "$TARGET_DIR")\",\"bundleVersion\":\"$(json_escape "$(node -p "require('$MANIFEST_SOURCE').bundleVersion")")\",\"installed\":$INSTALLED,\"replaced\":$REPLACED,\"skipped\":$SKIPPED,\"withConfig\":$(json_bool "$WITH_CONFIG"),\"forced\":$(json_bool "$FORCE"),\"manifestPath\":\"$(json_escape "$INSTALL_MANIFEST")\",\"note\":\"$(json_escape "$NOTES")\"}"
 write_summary_file "$SUMMARY_FILE" "$SUMMARY_JSON"
 
 echo ""
 echo "Web accessibility audit bundle installed."
 echo "Target: $TARGET_DIR"
+echo "Platform: $PLATFORM"
 echo "Installed: $INSTALLED; replaced: $REPLACED; skipped: $SKIPPED"
-echo "Start in Copilot Chat with @web-accessibility-wizard."
+if [ "$PLATFORM" = "copilot" ] || [ "$PLATFORM" = "both" ]; then
+  echo "Copilot: start in Copilot Chat with @web-accessibility-wizard."
+fi
+if [ "$PLATFORM" = "claude" ] || [ "$PLATFORM" = "both" ]; then
+  echo "Claude Code: invoke the web-accessibility-wizard agent or run /audit."
+fi
 echo "Playwright/MCP was not installed; the wizard will report when behavioral tools are unavailable."
 
 [ "$DOWNLOADED" = false ] || true

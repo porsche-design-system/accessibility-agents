@@ -1,7 +1,11 @@
 {
   "schemaVersion": "1.0",
-  "bundleVersion": "1.0.0",
-  "description": "GitHub Copilot customizations for guided web accessibility audits.",
+  "bundleVersion": "1.1.0",
+  "description": "GitHub Copilot and Claude Code customizations for guided web accessibility audits.",
+  "platforms": {
+    "copilot": ["agents", "skills", "prompts", "instructions"],
+    "claude": ["claudeAgents", "claudeSpecialists", "claudeSkills", "claudeCommands", "claudeMeta"]
+  },
   "files": {
     "agents": [
       ".github/agents/web-accessibility-wizard.agent.md",
@@ -80,9 +84,97 @@
       ".github/instructions/testing-accessibility.instructions.md",
       ".github/instructions/multi-agent-reliability.instructions.md",
       ".github/instructions/agent-terminology.instructions.md"
+    ],
+    "claudeAgents": [
+      ".claude/agents/web-accessibility-wizard.md",
+      ".claude/agents/accessibility-lead.md"
+    ],
+    "claudeSpecialists": [
+      ".claude/specialists/design-system-auditor.md",
+      ".claude/specialists/aria-specialist.md",
+      ".claude/specialists/alt-text-headings.md",
+      ".claude/specialists/keyboard-navigator.md",
+      ".claude/specialists/modal-specialist.md",
+      ".claude/specialists/forms-specialist.md",
+      ".claude/specialists/contrast-master.md",
+      ".claude/specialists/live-region-controller.md",
+      ".claude/specialists/tables-data-specialist.md",
+      ".claude/specialists/link-checker.md",
+      ".claude/specialists/testing-coach.md",
+      ".claude/specialists/wcag-guide.md",
+      ".claude/specialists/text-quality-reviewer.md",
+      ".claude/specialists/cognitive-accessibility.md",
+      ".claude/specialists/cross-page-analyzer.md",
+      ".claude/specialists/web-issue-fixer.md",
+      ".claude/specialists/web-csv-reporter.md",
+      ".claude/specialists/scanner-bridge.md",
+      ".claude/specialists/lighthouse-bridge.md",
+      ".claude/specialists/playwright-scanner.md",
+      ".claude/specialists/playwright-verifier.md"
+    ],
+    "claudeSkills": [
+      ".claude/skills/web-scanning/SKILL.md",
+      ".claude/skills/web-severity-scoring/SKILL.md",
+      ".claude/skills/framework-accessibility/SKILL.md",
+      ".claude/skills/playwright-testing/SKILL.md",
+      ".claude/skills/testing-strategy/SKILL.md",
+      ".claude/skills/help-url-reference/SKILL.md",
+      ".claude/skills/github-a11y-scanner/SKILL.md",
+      ".claude/skills/lighthouse-scanner/SKILL.md",
+      ".claude/skills/cognitive-accessibility/SKILL.md",
+      ".claude/skills/design-system/SKILL.md",
+      ".claude/skills/ci-integration/SKILL.md"
+    ],
+    "claudeCommands": [
+      ".claude/commands/audit.md",
+      ".claude/commands/aria.md",
+      ".claude/commands/keyboard.md",
+      ".claude/commands/contrast.md",
+      ".claude/commands/forms.md",
+      ".claude/commands/modal.md",
+      ".claude/commands/live-region.md",
+      ".claude/commands/alt-text.md",
+      ".claude/commands/tables.md",
+      ".claude/commands/links.md",
+      ".claude/commands/test.md",
+      ".claude/commands/wcag.md",
+      ".claude/commands/cognitive.md",
+      ".claude/commands/design-system.md"
+    ],
+    "claudeMeta": [
+      ".claude/AGENTS.md"
     ]
   },
+  "fileSources": {
+    ".claude/skills/web-scanning/SKILL.md": ".github/skills/web-scanning/SKILL.md",
+    ".claude/skills/web-severity-scoring/SKILL.md": ".github/skills/web-severity-scoring/SKILL.md",
+    ".claude/skills/framework-accessibility/SKILL.md": ".github/skills/framework-accessibility/SKILL.md",
+    ".claude/skills/playwright-testing/SKILL.md": ".github/skills/playwright-testing/SKILL.md",
+    ".claude/skills/testing-strategy/SKILL.md": ".github/skills/testing-strategy/SKILL.md",
+    ".claude/skills/help-url-reference/SKILL.md": ".github/skills/help-url-reference/SKILL.md",
+    ".claude/skills/github-a11y-scanner/SKILL.md": ".github/skills/github-a11y-scanner/SKILL.md",
+    ".claude/skills/lighthouse-scanner/SKILL.md": ".github/skills/lighthouse-scanner/SKILL.md",
+    ".claude/skills/cognitive-accessibility/SKILL.md": ".github/skills/cognitive-accessibility/SKILL.md",
+    ".claude/skills/design-system/SKILL.md": ".github/skills/design-system/SKILL.md",
+    ".claude/skills/ci-integration/SKILL.md": ".github/skills/ci-integration/SKILL.md",
+    ".claude/commands/audit.md": "claude-code-plugin/commands/audit.md",
+    ".claude/commands/aria.md": "claude-code-plugin/commands/aria.md",
+    ".claude/commands/keyboard.md": "claude-code-plugin/commands/keyboard.md",
+    ".claude/commands/contrast.md": "claude-code-plugin/commands/contrast.md",
+    ".claude/commands/forms.md": "claude-code-plugin/commands/forms.md",
+    ".claude/commands/modal.md": "claude-code-plugin/commands/modal.md",
+    ".claude/commands/live-region.md": "claude-code-plugin/commands/live-region.md",
+    ".claude/commands/alt-text.md": "claude-code-plugin/commands/alt-text.md",
+    ".claude/commands/tables.md": "claude-code-plugin/commands/tables.md",
+    ".claude/commands/links.md": "claude-code-plugin/commands/links.md",
+    ".claude/commands/test.md": "claude-code-plugin/commands/test.md",
+    ".claude/commands/wcag.md": "claude-code-plugin/commands/wcag.md",
+    ".claude/commands/cognitive.md": "claude-code-plugin/commands/cognitive.md",
+    ".claude/commands/design-system.md": "claude-code-plugin/commands/design-system.md",
+    ".claude/AGENTS.md": "templates/claude-agents-web-audit.md"
+  },
   "managedInstructionSource": "templates/copilot-instructions-web-audit.md",
+  "managedClaudeInstructionSource": "templates/claude-instructions-web-audit.md",
   "configTemplate": "templates/a11y-web-config-moderate.json",
   "agentOverrides": {
     ".github/agents/web-accessibility-wizard.agent.md": {
@@ -129,6 +221,17 @@
         "text-quality-reviewer"
       ],
       "removeHandoffAgents": []
+    },
+    ".claude/agents/web-accessibility-wizard.md": {
+      "removeHandoffAgents": [
+        "document-accessibility-wizard"
+      ]
+    },
+    ".claude/agents/accessibility-lead.md": {
+      "removeHandoffAgents": [
+        "document-accessibility-wizard",
+        "markdown-a11y-assistant"
+      ]
     }
   }
 }

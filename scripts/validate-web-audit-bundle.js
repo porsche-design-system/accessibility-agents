@@ -10,6 +10,11 @@ const allowedPrefixes = [
   '.github/skills/',
   '.github/prompts/',
   '.github/instructions/',
+  '.claude/agents/',
+  '.claude/specialists/',
+  '.claude/skills/',
+  '.claude/commands/',
+  '.claude/AGENTS.md',
 ];
 const forbiddenSegments = [
   '/document-',
@@ -23,17 +28,44 @@ const forbiddenSegments = [
   '/markdown-',
   '/epub-',
 ];
+const COPILOT_CATEGORIES = ['agents', 'skills', 'prompts', 'instructions'];
+const CLAUDE_CATEGORIES = [
+  'claudeAgents',
+  'claudeSpecialists',
+  'claudeSkills',
+  'claudeCommands',
+  'claudeMeta',
+];
 
 function loadManifest() {
   return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 }
 
-function allBundleFiles(manifest) {
-  return Object.values(manifest.files).flat();
+function categoriesForPlatform(platform) {
+  if (platform === 'copilot') return COPILOT_CATEGORIES;
+  if (platform === 'claude') return CLAUDE_CATEGORIES;
+  return [...COPILOT_CATEGORIES, ...CLAUDE_CATEGORIES];
+}
+
+function allBundleFiles(manifest, platform = 'both') {
+  const categories = categoriesForPlatform(platform);
+  return categories.flatMap((category) => manifest.files[category] || []);
 }
 
 function agentId(file) {
-  return path.basename(file, '.agent.md');
+  return path.basename(file).replace(/\.agent\.md$/, '').replace(/\.md$/, '');
+}
+
+function installedAgentIds(manifest) {
+  const ids = new Set();
+  for (const file of manifest.files.agents || []) ids.add(agentId(file));
+  for (const file of manifest.files.claudeAgents || []) ids.add(agentId(file));
+  for (const file of manifest.files.claudeSpecialists || []) ids.add(agentId(file));
+  return ids;
+}
+
+function sourcePath(manifest, file) {
+  return manifest.fileSources?.[file] || file;
 }
 
 function parseInlineAgents(line) {
@@ -46,13 +78,36 @@ function formatAgents(agents) {
   return `agents: [${agents.map((name) => `'${name}'`).join(', ')}]`;
 }
 
+function sanitizeBody(content, deniedAgents) {
+  let output = content.replace(/WEB-ACCESSIBILITY-AUDIT\.md/g, 'ACCESSIBILITY-AUDIT.md');
+  for (const denied of deniedAgents) {
+    const pattern = new RegExp(
+      `^\\s*-\\s*\\*\\*${denied.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\*\\*.*$`,
+      'gm',
+    );
+    output = output.replace(pattern, '');
+    output = output.replace(
+      new RegExp(`direct users to the ${denied.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi'),
+      'focus on web accessibility audits only',
+    );
+    output = output.replace(
+      new RegExp(`For document accessibility[^.]*use the ${denied.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^.]*\\.`, 'gi'),
+      'This installer provides web accessibility audits only.',
+    );
+  }
+  return output;
+}
+
 function sanitizeAgent(content, file, manifest) {
   const first = content.indexOf('---');
   const second = content.indexOf('---', first + 3);
-  if (first !== 0 || second < 0) return content;
+  if (first !== 0 || second < 0) {
+    const override = manifest.agentOverrides?.[file] || {};
+    return sanitizeBody(content, new Set(override.removeHandoffAgents || []));
+  }
 
-  const installedAgents = new Set(manifest.files.agents.map(agentId));
-  const override = manifest.agentOverrides[file] || {};
+  const installedAgents = installedAgentIds(manifest);
+  const override = manifest.agentOverrides?.[file] || {};
   const frontmatter = content.slice(3, second).replace(/^\n/, '').split('\n');
   const body = content.slice(second + 3);
   const output = [];
@@ -101,14 +156,13 @@ function sanitizeAgent(content, file, manifest) {
     index += 1;
   }
 
-  return `---\n${output.join('\n')}\n---${body}`.replace(
-    /WEB-ACCESSIBILITY-AUDIT\.md/g,
-    'ACCESSIBILITY-AUDIT.md',
-  );
+  const denied = new Set(override.removeHandoffAgents || []);
+  return sanitizeBody(`---\n${output.join('\n')}\n---${body}`, denied);
 }
 
 function collectAgentReferences(content) {
   const second = content.indexOf('---', 3);
+  if (second < 0) return new Set();
   const frontmatter = content.slice(3, second);
   const references = new Set();
   frontmatter.split('\n').forEach((line) => {
@@ -119,9 +173,17 @@ function collectAgentReferences(content) {
   return references;
 }
 
-function validate(root = repoRoot) {
+function isSanitizedAgent(file, manifest) {
+  return (
+    manifest.files.agents.includes(file)
+    || manifest.files.claudeAgents.includes(file)
+    || manifest.files.claudeSpecialists.includes(file)
+  );
+}
+
+function validate(root = repoRoot, platform = 'both') {
   const manifest = loadManifest();
-  const files = allBundleFiles(manifest);
+  const files = allBundleFiles(manifest, platform);
   const errors = [];
   const seen = new Set();
 
@@ -132,28 +194,54 @@ function validate(root = repoRoot) {
   for (const file of files) {
     if (seen.has(file)) errors.push(`Duplicate bundle path: ${file}`);
     seen.add(file);
-    if (!allowedPrefixes.some((prefix) => file.startsWith(prefix))) {
+    if (!allowedPrefixes.some((prefix) => file.startsWith(prefix) || file === prefix)) {
       errors.push(`Unsupported bundle path: ${file}`);
     }
     if (forbiddenSegments.some((segment) => file.includes(segment))) {
       errors.push(`Non-web resource in bundle: ${file}`);
     }
-    if (!fs.existsSync(path.join(root, file))) {
-      errors.push(`Missing bundle file: ${file}`);
+    const source = sourcePath(manifest, file);
+    if (!fs.existsSync(path.join(repoRoot, source))) {
+      errors.push(`Missing bundle file: ${file} (source: ${source})`);
+    }
+    if (root !== repoRoot && !fs.existsSync(path.join(root, file))) {
+      errors.push(`Missing installed file: ${file}`);
     }
   }
 
-  for (const supportFile of [manifest.managedInstructionSource, manifest.configTemplate]) {
-    if (!fs.existsSync(path.join(repoRoot, supportFile))) {
+  const supportFiles = [manifest.managedInstructionSource, manifest.configTemplate];
+  if (platform === 'claude' || platform === 'both') {
+    supportFiles.push(manifest.managedClaudeInstructionSource);
+    supportFiles.push(manifest.claudeAgentsSource || 'templates/claude-agents-web-audit.md');
+  }
+  for (const supportFile of supportFiles) {
+    if (supportFile && !fs.existsSync(path.join(repoRoot, supportFile))) {
       errors.push(`Missing support file: ${supportFile}`);
     }
   }
 
-  const installedAgents = new Set(manifest.files.agents.map(agentId));
-  for (const file of manifest.files.agents) {
-    const source = path.join(repoRoot, file);
-    if (!fs.existsSync(source)) continue;
-    const rendered = sanitizeAgent(fs.readFileSync(source, 'utf8'), file, manifest);
+  const installedAgents = installedAgentIds(manifest);
+  const agentFiles = [
+    ...(platform === 'claude' ? [] : manifest.files.agents),
+    ...(platform === 'copilot' ? [] : [
+      ...(manifest.files.claudeAgents || []),
+      ...(manifest.files.claudeSpecialists || []),
+    ]),
+  ];
+  if (platform === 'both') {
+    agentFiles.length = 0;
+    agentFiles.push(
+      ...manifest.files.agents,
+      ...(manifest.files.claudeAgents || []),
+      ...(manifest.files.claudeSpecialists || []),
+    );
+  }
+
+  for (const file of agentFiles) {
+    const source = sourcePath(manifest, file);
+    const sourcePathOnDisk = path.join(repoRoot, source);
+    if (!fs.existsSync(sourcePathOnDisk)) continue;
+    const rendered = sanitizeAgent(fs.readFileSync(sourcePathOnDisk, 'utf8'), file, manifest);
     for (const reference of collectAgentReferences(rendered)) {
       if (!installedAgents.has(reference)) {
         errors.push(`${file} references unavailable agent: ${reference}`);
@@ -165,8 +253,17 @@ function validate(root = repoRoot) {
     errors.forEach((error) => console.error(`ERROR: ${error}`));
     return false;
   }
-  console.log(`Web audit bundle is valid (${files.length} files).`);
+  console.log(`Web audit bundle is valid (${files.length} files for ${platform}).`);
   return true;
+}
+
+function renderFile(manifest, file) {
+  const source = sourcePath(manifest, file);
+  const content = fs.readFileSync(path.join(repoRoot, source), 'utf8');
+  if (isSanitizedAgent(file, manifest)) {
+    return sanitizeAgent(content, file, manifest);
+  }
+  return content.replace(/WEB-ACCESSIBILITY-AUDIT\.md/g, 'ACCESSIBILITY-AUDIT.md');
 }
 
 function main() {
@@ -174,33 +271,45 @@ function main() {
   const args = process.argv.slice(2);
   const renderIndex = args.indexOf('--render');
   const rootIndex = args.indexOf('--installed-root');
+  const platformIndex = args.indexOf('--platform');
+  const platform = platformIndex === -1 ? 'both' : args[platformIndex + 1];
+
+  if (!['copilot', 'claude', 'both'].includes(platform)) {
+    throw new Error(`Unsupported platform: ${platform}`);
+  }
 
   if (args.includes('--list')) {
-    for (const [category, files] of Object.entries(manifest.files)) {
-      files.forEach((file) => process.stdout.write(`${category}\t${file}\n`));
+    for (const category of categoriesForPlatform(platform)) {
+      for (const file of manifest.files[category] || []) {
+        process.stdout.write(`${category}\t${file}\n`);
+      }
     }
     return;
   }
 
   if (renderIndex !== -1) {
     const file = args[renderIndex + 1];
-    if (!allBundleFiles(manifest).includes(file)) {
+    if (!allBundleFiles(manifest, 'both').includes(file)) {
       throw new Error(`Cannot render path outside the bundle: ${file}`);
     }
-    const content = fs.readFileSync(path.join(repoRoot, file), 'utf8');
-    const rendered = manifest.files.agents.includes(file)
-      ? sanitizeAgent(content, file, manifest)
-      : content.replace(/WEB-ACCESSIBILITY-AUDIT\.md/g, 'ACCESSIBILITY-AUDIT.md');
-    process.stdout.write(rendered);
+    process.stdout.write(renderFile(manifest, file));
     return;
   }
 
   const root = rootIndex === -1 ? repoRoot : path.resolve(args[rootIndex + 1]);
-  process.exitCode = validate(root) ? 0 : 1;
+  process.exitCode = validate(root, platform) ? 0 : 1;
 }
 
 if (require.main === module) {
   main();
 }
 
-module.exports = { allBundleFiles, loadManifest, sanitizeAgent, validate };
+module.exports = {
+  allBundleFiles,
+  categoriesForPlatform,
+  loadManifest,
+  renderFile,
+  sanitizeAgent,
+  sourcePath,
+  validate,
+};
